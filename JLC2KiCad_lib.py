@@ -63,8 +63,8 @@ if __name__ == '__main__':
 						default = "default_lib",
 						help='set schematic library name, default is "default_lib"')
 	parser.add_argument('-footprint_lib', dest='footprint_lib', type=str,
-						default = "modules",
-						help='set footprint library name,  default is "modules"')
+						default = "footprint",
+						help='set footprint library name,  default is "footprint"')
 
 	parser.add_argument('-logging_level', dest='logging_level', type=str,
 						default = "INFO",
