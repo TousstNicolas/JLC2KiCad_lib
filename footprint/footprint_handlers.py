@@ -86,12 +86,15 @@ def h_PAD(data, kicad_mod, footprint_info):
 		footprint_info.min_X = min(footprint_info.min_X, at[0], at[0]) 
 		footprint_info.max_Y = max(footprint_info.max_Y, at[1], at[1]) 
 		footprint_info.min_Y = min(footprint_info.min_Y, at[1], at[1]) 
-
-
+		
+		
 		if shape == "SHAPE_OVAL":
 			rotation = float(data[9])
 		elif shape == "SHAPE_CUSTOM":
-			primitives = [float(prim) for prim in data[8].split(" ")]
+			points = []
+			for i, coord in enumerate(data[8].split(" ")):
+				points.append(mil2mm(coord) - at[i%2])
+			primitives = [Polygon(nodes=zip(points[::2], points[1::2]))]
 		elif shape == "SHAPE_CIRCLE":
 			pass
 		elif shape == "SHAPE_RECT":
@@ -117,7 +120,7 @@ def h_PAD(data, kicad_mod, footprint_info):
 
 	else :
 		logging.warning("unknown assembly_process: " + footprint_info.assembly_process)
-		return("SMT")
+		return()
 
 	# update footprint borders 
 	footprint_info.max_X = max(footprint_info.max_X, data[1]) 
