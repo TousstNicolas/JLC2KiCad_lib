@@ -70,7 +70,7 @@ if __name__ == '__main__':
 						default = "INFO",
 						help='set logging level')
 	parser.add_argument('--log_file', dest='log_file', action = 'store_true',					
-						help = 'use --no_schematic if you want logs to be written in a file')
+						help = 'use --log_file if you want logs to be written in a file')
 
 	args = parser.parse_args()
 
