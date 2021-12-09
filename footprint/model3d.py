@@ -1,96 +1,104 @@
 import requests
 import logging
 import os 
-
+import re 
 from KicadModTree import *
 
-
-def get_3Dmodel(component_uuid, footprint_info, kicad_mod, translationZ, rotation):
-
-	logging.info("creating 3D model ...")
-
-	lines = requests.get(f"https://easyeda.com/analyzer/api/3dmodel/{component_uuid}").content.decode().split("\n")
-
-	vertices = []
-	faces = []
-	color_change = []
-	vertices_counter = 0
-	last_change = 0
-	translationX, translationY, translationZ = 0, 0, float(translationZ)/3.048 # foot to mm 
-
-	for line in lines :
-		if len(line) > 0 and line[0] == "v":
-			_,  x, y, z = line.split(" ")
-			vertices.append(' '.join([str(round(float(x)/2.54,4)), str(round(float(y)/2.54,4)), str(round(float(z)/2.54,4))]))  #TODO 
-			vertices_counter += 1 
-		elif len(line) > 0 and line[0] == "f":
-			_, x, y, z = line.split(" ")
-			faces.append(', '.join([str(int(x[:-2])-1), str(int(y[:-2])-1), str(int(z[:-2])-1), "-1"]))
-		elif len(line) > 0 and line[0:2] == "Kd":
-			_, r, g, b = line.split(" ")
-			color_change.append([vertices_counter - last_change,  str(1-float(r)), str(1-float(g)), str(1-float(b))])
-			last_change = vertices_counter
-		elif len(line) > 0 and line[0:2] == "Ka":
-			pass
-		elif len(line) > 0 and line[0:2] == "Ks":
-			pass
-		elif len(line) > 0 and line[0:1] == "d":
-			pass
-		elif len(line) > 0 and line[0:6] == "newmtl" or line[0:6] == "endmtl" or line[0:6] == "usemtl" :
-			pass
-		elif len(line) == 0: 
-			pass
-		else : 
-			logging.warning("3D model handler not supported")
-			logging.debug(line)
-
-	wrl_header = f"""#VRML V2.0 utf8
+wrl_header = """#VRML V2.0 utf8
 #created by JLC2KiCad_lib using the JLCPCB library
 #for more info see https://github.com/TousstNicolas/JLC2KICAD_lib
-
-Group {{
-	translation {translationX} {translationY} {translationZ}
-	children [
-		Shape {{
-			appearance Appearance {{
-				material Material {{
-					diffuseColor 1.0 1.0 1.0
-					ambientIntensity 0.2
-					specularColor 0.8 0.8 0.8
-					shininess 0.4
-					transparency 0
-				}}
-			}}
-			geometry IndexedFaceSet {{
-				ccw TRUE
-				solid FALSE
-				coord DEF co Coordinate {{
-					point [
-						"""
-
-	wrl_vertices2faces = """,
-					]
-				}
-				coordIndex [
-					"""
-
-	wrl_faces2colors = """
-				]
-				colorPerVertex TRUE
-				color Color {
-					color [
 """
 
-	wrl_footer = """				]
-				}
-			}
-		}
-	]
-}"""
+def get_3Dmodel(component_uuid, footprint_info, kicad_mod, translationZ, rotation):
+	logging.info("creating 3D model ...")
 
-	wrl_color_change = ""
-	for change in color_change:
-		wrl_color_change += ('' + ' '.join(change[1:]) + ",\n")*change[0]
+	text = requests.get(f"https://easyeda.com/analyzer/api/3dmodel/{component_uuid}").content.decode()
+
+	translationX, translationY, translationZ = 0, 0, float(translationZ)/3.048 # foot to mm 
+
+	wrl_content = wrl_header
+
+	# get material list
+	pattern = "newmtl .*?endmtl"	
+	matchs = re.findall(pattern = pattern, string = text, flags = re.DOTALL)
+	
+	materials = {}
+	for match in matchs :
+		material = {}
+		material_id = ""
+		for value in match.split("\n") :
+			if value[0:6] == "newmtl" :
+				material_id = value.split(" ")[1]
+			elif value[0:2] == "Ka":
+				material["ambientColor"] = value.split(" ")[1:]
+			elif value[0:2] == "Kd":
+				material["diffuseColor"] = value.split(" ")[1:]
+			elif value[0:2] == "Ks":
+				material["specularColor"] = value.split(" ")[1:]
+			elif value[0] == "d":
+				material["transparency"] = value.split(" ")[1]
+
+		materials[material_id] = material
+
+	#get vertices list
+	pattern = "v (.*?)\n"
+	matchs = re.findall(pattern = pattern, string = text, flags = re.DOTALL)
+
+	vertices = []
+	for vertice in matchs:
+		vertices.append(" ".join([str(round(float(coord)/2.54, 4)) for coord in vertice.split(" ")]))
+
+	#get shape list
+	shapes = text.split("usemtl")[1:]
+	for shape in shapes :
+		lines = shape.split("\n")
+		material = materials[lines[0].replace(" ", "")]
+		index_counter = 0
+		link_dict = {}
+		coordIndex =[]
+		points = []
+		for line in lines[1:]:
+			if len(line)> 0: 
+				face = [int(index) for index in line.replace("//", "").split(" ")[1:]]
+				face_index = []
+				for index in face :
+					if index not in link_dict :
+						link_dict[index] = index_counter
+						face_index.append(str(index_counter))
+						points.append(vertices[index-1])
+						index_counter += 1
+					else : 
+						face_index.append(str(link_dict[index]))
+				face_index.append("-1")
+				coordIndex.append(",".join(face_index) + ",")
+		points.insert(-1,points[-1])
+	
+		shape_str = f"""
+Shape{{
+	appearance Appearance {{
+		material  Material 	{{ 
+			diffuseColor {' '.join(material['diffuseColor'])} 
+			specularColor {' '.join(material['specularColor'])}
+			ambientIntensity 0.2
+			transparency {material['transparency']}
+			shininess 0.5
+		}}
+	}}
+	geometry IndexedFaceSet {{
+		ccw TRUE 
+		solid FALSE
+		coord DEF co Coordinate {{
+			point [
+				{(", ").join(points)}
+			]
+		}}
+		coordIndex [
+			{"".join(coordIndex)}
+		]
+	}}
+}}"""
+
+		wrl_content += shape_str
 
 	if not os.path.exists(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"):
 		os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
@@ -99,13 +107,10 @@ Group {{
 	
 	filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.wrl"
 	with open(filename, "w") as f:
-		f.write(wrl_header)
-		f.write(',\n'.join(vertices))
-		f.write(wrl_vertices2faces)
-		f.write(',\n'.join(faces))
-		f.write(wrl_faces2colors)
-		f.write(wrl_color_change)
-		f.write(wrl_footer)	    
+		f.write(wrl_content)
 
-	kicad_mod.append(Model(filename = f"{os.path.dirname(__file__)}\{filename}", rotate = [-float(axis_rotation) for axis_rotation in rotation.split(',')]))
+
+	dirname = os.path.dirname(__file__).replace('\\','/').replace("/footprint", "")
+	kicad_mod.append(Model(filename = f"{dirname}/{filename}", rotate = [-float(axis_rotation) for axis_rotation in rotation.split(',')]))
 	logging.info(f"added {filename} to footprint")
+	

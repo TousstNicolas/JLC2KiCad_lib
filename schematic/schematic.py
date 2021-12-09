@@ -106,7 +106,6 @@ def update_library(library_name, component_title, template_lib_component, output
 			lib_file.write(sub.encode())
 		else : 
 			# move before the library footer and write the component template 
-			logging.info(f"component not found in {library_name}, adding the component ...")
 			lib_file.seek(-len(template_lib_footer),2)
 			lib_file.truncate()
 			lib_file.write(template_lib_component.encode())
