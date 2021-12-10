@@ -24,7 +24,7 @@ def h_R(data, kicad_schematic):
 	part = kicad_schematic.part
 	dmg = "0"
 	pen = "0"
-	fill = ""
+	fill = "f"
 
 	kicad_schematic.drawing += f"\nS {X1} {Y1} {X2} {Y2} {part} {dmg} {pen} {fill}"
 
@@ -151,7 +151,8 @@ def h_PL(data, kicad_schematic):
 		count = int(len(data[0].split(" "))/2)
 		dmg = 0
 		pen = 0
-		kicad_schematic.drawing += f"\nP {count} {kicad_schematic.part} {dmg} {pen} {' '.join([str(round(float(i)*RELATIVE_OFFSET - ABSOLUTE_OFFSET)) for i in data[0].split(' ')])}"
+		fill = "f"
+		kicad_schematic.drawing += f"\nP {count} {kicad_schematic.part} {dmg} {pen} {' '.join([str(round(float(i)*RELATIVE_OFFSET - ABSOLUTE_OFFSET)) for i in data[0].split(' ')])} {fill}"
 	except :
 		logging.exception("Schematic : failed to add a polygone")
 
