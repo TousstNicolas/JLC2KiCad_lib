@@ -101,6 +101,7 @@ def get_footprint_info(component_id):
 			component_data = json.loads(requests.get(f"https://jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentLcscId={component_lcscid}").content.decode())["data"]
 			datasheet_link = component_data['dataManualUrl']
 			assembly_process = component_data["assemblyProcess"]
+			logging.debug(f"'get_footprint_info : component_data : {component_data}")
 			break
 	
 	return(footprint_name, datasheet_link, assembly_process)
