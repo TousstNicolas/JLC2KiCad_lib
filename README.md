@@ -5,9 +5,16 @@ This script requires **Python 3.6** or higher.
 
 ## Usage 
 ```
-JLC2KiCad_lib.py [-h] [-dir OUTPUT_DIR] [--no_footprint] [--no_schematic] [-schematic_lib SCHEMATIC_LIB]
-                        [-footprint_lib FOOTPRINT_LIB] [-logging_level LOGGING_LEVEL] [--log_file]
-                        JLCPCB_part_# [JLCPCB_part_# ...]
+JLC2KiCad_lib.py JLCPCB_part_# [JLCPCB_part_# ...]
+                 [-h] 
+                 [-dir OUTPUT_DIR] 
+                 [--model_path_relative] 
+                 [--no_footprint]        
+                 [--no_schematic] 
+                 [-schematic_lib SCHEMATIC_LIB] 
+                 [-footprint_lib FOOTPRINT_LIB]
+                 [-logging_level LOGGING_LEVEL] [--log_file]
+                        
 ```
 
 example usage : `python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib --no_footprint`

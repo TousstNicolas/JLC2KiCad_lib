@@ -109,8 +109,11 @@ Shape{{
 	with open(filename, "w") as f:
 		f.write(wrl_content)
 
-
-	dirname = os.path.dirname(__file__).replace('\\','/').replace("/footprint", "")
-	kicad_mod.append(Model(filename = f"{dirname}/{filename}", rotate = [-float(axis_rotation) for axis_rotation in rotation.split(',')]))
+	if footprint_info.model_path_relative:
+		dirname =  ""
+	else : 
+		dirname = os.path.dirname(__file__).replace('\\','/').replace("/footprint", "") + "/"
+	
+	kicad_mod.append(Model(filename = f"{dirname}{filename}", rotate = [-float(axis_rotation) for axis_rotation in rotation.split(',')]))
 	logging.info(f"added {filename} to footprint")
 	

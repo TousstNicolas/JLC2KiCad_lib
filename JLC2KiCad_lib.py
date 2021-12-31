@@ -28,7 +28,8 @@ def add_component(component_id, args):
 		footprint_name, datasheet_link = create_footprint(footprint_component_uuid = footprint_component_uuid, 
 														  component_id = component_id, 
 														  footprint_lib = args.footprint_lib, 
-														  output_dir = args.output_dir)
+														  output_dir = args.output_dir,
+														  model_path_relative = args.model_path_relative,)
 	else :
 		_, datasheet_link, _ = get_footprint_info(component_id)
 		footprint_name = ""
@@ -54,14 +55,19 @@ if __name__ == '__main__':
 						default="JLC2KiCad_lib",
 						help='base directory for output library files')
 
+	parser.add_argument('--model_path_relative', dest='model_path_relative', action = 'store_true',
+						help = 'use --model_path_relative if you want the 3D model to be link to the footprint using relative instead of absolute path.  default : absolute')
+
 	parser.add_argument('--no_footprint', dest='footprint_creation', action = 'store_false',					
 						help = 'use --no_footprint if you do not want to create the footprint')
+
 	parser.add_argument('--no_schematic', dest='schematic_creation', action = 'store_false',					
 						help = 'use --no_schematic if you do not want to create the schematic')
 
 	parser.add_argument('-schematic_lib', dest='schematic_lib', type=str,
 						default = "default_lib",
 						help='set schematic library name, default is "default_lib"')
+
 	parser.add_argument('-footprint_lib', dest='footprint_lib', type=str,
 						default = "footprint",
 						help='set footprint library name,  default is "footprint"')
@@ -69,12 +75,12 @@ if __name__ == '__main__':
 	parser.add_argument('-logging_level', dest='logging_level', type=str,
 						default = "INFO",
 						help='set logging level')
+
 	parser.add_argument('--log_file', dest='log_file', action = 'store_true',					
 						help = 'use --log_file if you want logs to be written in a file')
 
 	args = parser.parse_args()
 
 	helper.set_logging(args.logging_level, args.log_file)
-
 	for component in args.components:
 		add_component(component, args)

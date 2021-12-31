@@ -7,7 +7,7 @@ from footprint.footprint_handlers import *
 
 
 
-def create_footprint(footprint_component_uuid, component_id, footprint_lib, output_dir):
+def create_footprint(footprint_component_uuid, component_id, footprint_lib, output_dir, model_path_relative):
 	logging.info("creating footprint ...")
 
 	#fetch the compoennt data for easyeda library
@@ -28,6 +28,7 @@ def create_footprint(footprint_component_uuid, component_id, footprint_lib, outp
 			self.footprint_name = footprint_name
 			self.output_dir = output_dir
 			self.footprint_lib = footprint_lib
+			self.model_path_relative = model_path_relative
 
 	footprint_info = footprint_info(footprint_name = footprint_name,
 									output_dir = output_dir,
