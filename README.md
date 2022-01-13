@@ -5,15 +5,23 @@ This script requires **Python 3.6** or higher.
 
 ## Usage 
 ```
-JLC2KiCad_lib.py JLCPCB_part_# [JLCPCB_part_# ...]
-                 [-h] 
-                 [-dir OUTPUT_DIR] 
-                 [--model_path_relative] 
-                 [--no_footprint]        
-                 [--no_schematic] 
-                 [-schematic_lib SCHEMATIC_LIB] 
-                 [-footprint_lib FOOTPRINT_LIB]
-                 [-logging_level LOGGING_LEVEL] [--log_file]
+positional arguments:
+  JLCPCB_part_#         list of JLCPCB part # from the components you want to create
+
+options:
+  -h, --help            show this help message and exit
+  -dir OUTPUT_DIR       base directory for output library files
+  --model_path_relative
+                        use --model_path_relative if you want the 3D model to be linked to the footprint using relative instead of absolute path, default is absolute
+  --no_footprint        use --no_footprint if you do not want to create the footprint
+  --no_schematic        use --no_schematic if you do not want to create the schematic
+  -schematic_lib SCHEMATIC_LIB
+                        set schematic library name, default is "default_lib"
+  -footprint_lib FOOTPRINT_LIB
+                        set footprint library name, default is "footprint"
+  -logging_level LOGGING_LEVEL
+                        set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
+  --log_file            use --log_file if you want logs to be written in a file
                         
 ```
 

@@ -56,7 +56,7 @@ if __name__ == '__main__':
 						help='base directory for output library files')
 
 	parser.add_argument('--model_path_relative', dest='model_path_relative', action = 'store_true',
-						help = 'use --model_path_relative if you want the 3D model to be link to the footprint using relative instead of absolute path.  default : absolute')
+						help = 'use --model_path_relative if you want the 3D model to be linked to the footprint using relative instead of absolute path, default is absolute')
 
 	parser.add_argument('--no_footprint', dest='footprint_creation', action = 'store_false',					
 						help = 'use --no_footprint if you do not want to create the footprint')
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('-logging_level', dest='logging_level', type=str,
 						default = "INFO",
-						help='set logging level')
+						help='set logging level. If DEBUG is used, the debug logs are only written in the log file if the option  --log_file is set ')
 
 	parser.add_argument('--log_file', dest='log_file', action = 'store_true',					
 						help = 'use --log_file if you want logs to be written in a file')
@@ -82,5 +82,6 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	helper.set_logging(args.logging_level, args.log_file)
+
 	for component in args.components:
 		add_component(component, args)
