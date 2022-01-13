@@ -11,9 +11,13 @@ wrl_header = """#VRML V2.0 utf8
 
 def get_3Dmodel(component_uuid, footprint_info, kicad_mod, translationZ, rotation):
 	logging.info("creating 3D model ...")
-
-	text = requests.get(f"https://easyeda.com/analyzer/api/3dmodel/{component_uuid}").content.decode()
-
+	
+	response = requests.get(f"https://easyeda.com/analyzer/api/3dmodel/{component_uuid}")
+	if response.status_code == requests.codes.ok:
+		text = response.content.decode()
+	else : 
+		logging.error("request error, no 3D model found")
+		return()
 	translationX, translationY, translationZ = 0, 0, float(translationZ)/3.048 # foot to mm 
 
 	wrl_content = wrl_header
