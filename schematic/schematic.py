@@ -32,7 +32,13 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 
 		kicad_schematic.part += 1
 
-		data = json.loads(requests.get(f"https://easyeda.com/api/components/{component_uuid}").content.decode())
+		response = requests.get(f"https://easyeda.com/api/components/{component_uuid}")
+		if response.status_code == requests.codes.ok: 
+			data = json.loads(response.content.decode())
+		else :
+			logging.error(f"create_schematic error. Requests returned with error code {response.status_code}")
+			return()
+
 		schematic_shape = data["result"]["dataStr"]["shape"]
 		symmbolic_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"]["pre"].replace("?", "")
 		

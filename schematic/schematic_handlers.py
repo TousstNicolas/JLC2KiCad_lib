@@ -84,7 +84,7 @@ def h_P(data, kicad_schematic):
 		Y -= int(length/2)
 	else :
 		orientation = 'L'
-		logging.warning(f"Schematic : pin {pin_name} number {pin_number} failed to find orientation. Using Default orientation 'Left' ")
+		logging.warning(f'Schematic : pin number {pin_number} : "{pin_name}" failed to find orientation. Using Default orientation "Left" ')
 
 	sizenum = "40"
 	sizename = "40"

@@ -11,7 +11,12 @@ def create_footprint(footprint_component_uuid, component_id, footprint_lib, outp
 	logging.info("creating footprint ...")
 
 	#fetch the compoennt data for easyeda library
-	data = json.loads(requests.get(f"https://easyeda.com/api/components/{footprint_component_uuid}").content.decode())
+	response = requests.get(f"https://easyeda.com/api/components/{footprint_component_uuid}")
+	if response.status_code == requests.codes.ok: 
+		data = json.loads(response.content.decode())
+	else :
+		logging.error(f"create_footprint error. Requests returned with error code {response.status_code}")
+		return()
 	footprint_shape = data["result"]["dataStr"]["shape"]
 
 	footprint_name, datasheet_link, assembly_process = get_footprint_info(component_id)
@@ -87,10 +92,16 @@ def get_footprint_info(component_id):
 				\"componentAttributes\":[]{}"
 				'''.format("{", component_id, "}")
 	
-	response = json.loads(requests.post(url = "https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList",
+	response = requests.post(url = "https://jlcpcb.com/shoppingCart/smtGood/selectSmtComponentList",
 				headers = {"Content-Type" : "application/json;charset=utf-8"}, 
-				data = request_data
-				).content.decode())
+				data = request_data)
+
+	if response.status_code == requests.codes.ok: 
+		response = json.loads(response.content.decode())
+	else :
+		logging.error(f"get_footprint_info request error. Requests returned with error code {response.status_code}")
+		return()
+
 
 	footprint_name = response['data']['componentPageInfo']['list'][0]['componentModelEn'].replace(' ', '_').replace('/', '_')
 
@@ -99,7 +110,13 @@ def get_footprint_info(component_id):
 		if component['componentCode'] == component_id:
 			component_lcscid = component['componentId']
 
-			component_data = json.loads(requests.get(f"https://jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentLcscId={component_lcscid}").content.decode())["data"]
+			response = requests.get(f"https://jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentLcscId={component_lcscid}")
+			if response.status_code == requests.codes.ok: 
+				component_data = json.loads(response.content.decode())['data']
+			else :
+				logging.error(f"get_footprint_info error, could not retrieve component's data. Requests returned with error code {response.status_code}")
+				return()
+			
 			datasheet_link = component_data['dataManualUrl']
 			assembly_process = component_data["assemblyProcess"]
 			logging.debug(f"'get_footprint_info : component_data : {component_data}")
