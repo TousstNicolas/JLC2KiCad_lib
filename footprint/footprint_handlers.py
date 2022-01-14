@@ -104,7 +104,9 @@ def h_PAD(data, kicad_mod, footprint_info):
 		pad_type = Pad.TYPE_THT
 		pad_layer = Pad.LAYERS_THT
 		data[11] = mil2mm(data[11])
-		if (data[7] * 2 < data[11]) ^ (size[0] > size[1]): # invert the orientation of the drill hole if not in the same orientation as the pad shape 
+		if data[11] == 0:
+			drill_size = data[7] * 2
+		elif (data[7] * 2 < data[11]) ^ (size[0] > size[1]): # invert the orientation of the drill hole if not in the same orientation as the pad shape 
 			drill_size = [data[7] * 2 , data[11]]
 		else :
 			drill_size = [data[11], data[7] * 2]
