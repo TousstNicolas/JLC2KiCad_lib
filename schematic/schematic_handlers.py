@@ -170,6 +170,36 @@ def h_PG(data, kicad_schematic):
 	except :
 		logging.exception("Schematic : failed to add a polygone")
 
+def h_A(data, kicad_schematic):
+	"""
+	A X Y radius start end part dmg pen fill Xstart Ystart Xend Yend
+
+	Arc. The start and end parameters are angles in 0.1 degrees. The Xstart
+	and Ystart parameters give the coordinate of the start point; it can be
+	calculated from the radius and the start angle. Similarly, the Xend and
+	Yend parameters give the coordinate of the end point. The arc is drawn in
+	counter-clockwise direction, but the angles are swapped if there
+	(normalized) difference exceeds 180 degrees
+	"""
+
+	pos = data[0].split(" ")
+	Xstart = int(float(pos[1])) * RELATIVE_OFFSET * 1.2 - 2 * ABSOLUTE_OFFSET
+	Ystart = int(float(pos[2])) * RELATIVE_OFFSET * 1.2 + ABSOLUTE_OFFSET 
+	Xend = int(float(pos[9]))   * RELATIVE_OFFSET * 1.2 - 2 * ABSOLUTE_OFFSET
+	Yend = int(float(pos[10]))  * RELATIVE_OFFSET * 1.2 + ABSOLUTE_OFFSET
+	X = int((Xstart + Xend)/4) 
+	Y = int((Ystart + Yend)/2) 
+
+	radius = int((float(pos[4])/2) * RELATIVE_OFFSET * 1.2)
+	start = "1800" 
+	end = "0" 
+	part = kicad_schematic.part 
+	dmg = 0
+	pen = 0
+
+	kicad_schematic.drawing += f"\nA {X} {Y} {radius} {start} {end} {part} {dmg} {pen}"
+
+
 handlers = {
 	"R" : h_R, 
 	"E" : h_E, 
@@ -177,4 +207,5 @@ handlers = {
 	"T" : h_T,
 	"PL" : h_PL,
 	"PG" : h_PG,
+	"A" : h_A,
 	}
