@@ -45,7 +45,7 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 		refname_y = 50		#TODO
 		compname_y = -100 	#TODO
 
-		component_title = data["result"]["title"].replace("/", "_")
+		component_title = data["result"]["title"].replace("/", "_").replace(" ", "_")
 		filename = f"{output_dir}/Schematic/" + library_name + ".lib"
 		
 		logging.info(f"creating schematic {component_title} in {library_name}")
