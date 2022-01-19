@@ -22,7 +22,7 @@ def create_footprint(footprint_component_uuid, component_id, footprint_lib, outp
 	footprint_name, datasheet_link, assembly_process = get_footprint_info(component_id)
 
 	# init kicad footprint 
-	kicad_mod = Footprint(footprint_name)
+	kicad_mod = Footprint(f"\"{footprint_name}\"")
 	kicad_mod.setDescription(f"{footprint_name} footprint")  #TODO Set real description  
 	kicad_mod.setTags(f"{footprint_name} footprint")
 
