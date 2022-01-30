@@ -170,6 +170,29 @@ def h_PG(data, kicad_schematic):
 	except :
 		logging.exception("Schematic : failed to add a polygone")
 
+def h_PT(data, kicad_schematic):
+	"""
+	triangle handler
+	
+	P count part dmg pen X Y 
+
+	fill Polygon with count vertices, and an X,Y position for each vertex. A filled 
+	polygon is implicitly closed, other polygons are open.
+	"""
+
+	try :
+		# Points = ' '.join([str(round(float(i)*RELATIVE_OFFSET - ABSOLUTE_OFFSET)) for i in data[0].split(' ') + data[0].split(' ')[:2]])
+		vertex = [str(round(float(i)*RELATIVE_OFFSET - ABSOLUTE_OFFSET)) for i in data[0].split(' ') if i not in ['M', 'L', 'Z', '']]
+		vertex += vertex[:2]
+		count = 3
+		dmg = 0
+		pen = 0
+		fill = 'f'
+		kicad_schematic.drawing += f"\nP {count + 1} {kicad_schematic.part} {dmg} {pen} {' '.join(vertex)} {fill}"
+	except :
+		logging.exception("Schematic : failed to add a polygone")
+
+
 def h_A(data, kicad_schematic):
 	"""
 	A X Y radius start end part dmg pen fill Xstart Ystart Xend Yend
@@ -207,5 +230,6 @@ handlers = {
 	"T" : h_T,
 	"PL" : h_PL,
 	"PG" : h_PG,
+	"PT" : h_PT,
 	"A" : h_A,
 	}
