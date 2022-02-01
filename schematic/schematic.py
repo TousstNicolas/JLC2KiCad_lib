@@ -8,16 +8,17 @@ from KicadModTree import *
 from schematic.schematic_handlers import *
 
 
-template_lib_header = """\
-EESchema-LIBRARY Version 2.4 \n# encoding utf-8
-# created by JLC2KiCad_lib using the JLCPCB library
-# for more info see https://github.com/TousstNicolas/JLC2KICAD_lib"""
+template_lib_header = f"""\
+(kicad_symbol_lib (version 20210201) (generator JLC2KiCad_lib)
+"""
 
-template_lib_footer = \
 """
-#
-# End Library
+;; created by JLC2KiCad_lib using the JLCPCB library
+;; for more info see https://github.com/TousstNicolas/JLC2KiCad_lib
 """
+
+template_lib_footer = """
+)"""
 	
 
 def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, library_name, output_dir):
@@ -41,12 +42,9 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 
 		schematic_shape = data["result"]["dataStr"]["shape"]
 		symmbolic_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"]["pre"].replace("?", "")
-		
-		refname_y = 50		#TODO
-		compname_y = -100 	#TODO
 
 		component_title = data["result"]["title"].replace("/", "_").replace(" ", "_")
-		filename = f"{output_dir}/Schematic/" + library_name + ".lib"
+		filename = f"{output_dir}/Schematic/" + library_name + ".kicad_sym"
 		
 		logging.info(f"creating schematic {component_title} in {library_name}")
 
@@ -59,21 +57,25 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 			else :
 				handlers.get(model)(args[1:], kicad_schematic)
 
-	template_lib_component = \
-f"""
-#
-# {component_title}
-#
-DEF {component_title} {symmbolic_prefix} 0 40 Y Y {kicad_schematic.part} F N
-F0 "{symmbolic_prefix}" 0 {refname_y} 50 H V C C N N
-F1 "{component_title}" 0 {compname_y} 50 H V C C N N
-F2 "{footprint_name}" 0 -400 50 H I C CIN
-F3 "{datasheet_link}" -90 5 50 H I L CNN
-DRAW\
+	template_lib_component = f"""\
+  (symbol "{component_title}" (pin_names (offset 1)) (in_bom yes) (on_board yes)
+    (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "{component_title}" (id 1) (at 0 -2.54 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "{footprint_name}" (id 2) (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) italic) hide)
+    )
+    (property "Datasheet" "{datasheet_link}" (id 3) (at -2.286 0.127 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (symbol "{component_title}_1_0" 
 {kicad_schematic.drawing}
-ENDDRAW
-ENDDEF"""
-	
+    )
+  )"""	
+
 	if not os.path.exists(f"{output_dir}/Schematic"):
 		os.makedirs(f"{output_dir}/Schematic")
 
@@ -96,15 +98,13 @@ def update_library(library_name, component_title, template_lib_component, output
 	the component will be added at the beginning  
 	"""
 	
-	with open(f"{output_dir}/Schematic/{library_name}.lib", 'rb+') as lib_file:
-		pattern = f".#.# {component_title}.*?ENDDEF"
+	with open(f"{output_dir}/Schematic/{library_name}.kicad_sym", 'rb+') as lib_file:
+		pattern = f'  \(symbol \"{component_title}\" \(pin_names (\n|.)*?\n  \)'
 		file_content = lib_file.read().decode()
 
-		# if component already in library, update the library,
-		# if not, append at the end of the library
-		if f"DEF {component_title}" in file_content:
+		if f'symbol "{component_title}" (pin_names' in file_content:
 			# use regex to find the old component template in the file and replace it with the new one 
-			logging.info(f'found component in {library_name}, updating {library_name}')
+			logging.info(f'found component already in {library_name}, updating {library_name}')
 			sub = re.sub(pattern= pattern, repl= template_lib_component, string= file_content, flags = re.DOTALL, count= 1)
 			lib_file.seek(0)
 			# delete the file content and rewrite it 
