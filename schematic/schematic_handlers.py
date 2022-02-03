@@ -30,7 +30,7 @@ def h_R(data, kicad_schematic):
 	X2 -= ABSOLUTE_OFFSET_X
 	Y2 -= ABSOLUTE_OFFSET_Y
 
-	kicad_schematic.drawing += f"""\
+	kicad_schematic.drawing += f"""
       (rectangle
         (start {X1} {Y1})
         (end {X2} {Y2})
@@ -75,8 +75,8 @@ def h_P(data, kicad_schematic):
 	else :
 		electrical_type = "unspecified"
 
-	pin_number = data[2]
-	pin_name = data[13]
+	pinNumber = data[2]
+	pinName = data[13]
 
 	X =  float(data[3]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
 	Y = -float(data[4]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
@@ -85,25 +85,31 @@ def h_P(data, kicad_schematic):
 		rotation = (int(data[5]) + 180) % 360
 	else :
 		rotation = 0
-		logging.warning(f'Schematic : pin number {pin_number} : "{pin_name}" failed to find orientation. Using Default orientation')
+		logging.warning(f'Schematic : pin number {pinNumber} : "{pinName}" failed to find orientation. Using Default orientation')
 
 	if rotation == 0 or rotation == 180:
 		length = abs(float(data[8].split('h')[-1])) * RELATIVE_OFFSET
 	elif rotation == 90 or rotation == 270:
 		length = abs(float(data[8].split('v')[-1])) * RELATIVE_OFFSET
 
-	# nameVisible = True if data[9].split('^^')[1] == '1' else False
-	# numberVisible = True if data[15].split('^^')[1] == '1' else False
-	# Visible3 = True if data[21].split('^^')[1] == '1' else False
-	# Visible4 = True if data[23].split('^^')[1] == '1' else False
+	try :
+		if  not kicad_schematic.pinNamesHide and data[9].split('^^')[1] == '0' :
+			kicad_schematic.pinNamesHide = "(pin_names hide)"
+		if  not kicad_schematic.pinNumbersHide and data[17].split('^^')[1] == '0':
+			kicad_schematic.pinNumbersHide = "(pin_numbers hide)"
 
+		nameSize   = float(data[16].replace('pt', '')) * RELATIVE_OFFSET
+		numberSize = float(data[24].replace('pt', '')) * RELATIVE_OFFSET
+	except :
+		nameSize   = 0.6
+		numberSize = 0.6
 
 	kicad_schematic.drawing += f"""
       (pin {electrical_type} line
         (at {X} {Y} {rotation})
         (length {length})
-        (name "{pin_name}" (effects (font (size 0.612 0.612))))
-        (number "{pin_number}" (effects (font (size 0.612 0.612))))
+        (name "{pinName}" (effects (font (size {nameSize} {nameSize}))))
+        (number "{pinNumber}" (effects (font (size {numberSize} {numberSize}))))
       )"""
 
 def h_T(data, kicad_schematic):
@@ -112,37 +118,20 @@ def h_T(data, kicad_schematic):
 	"""
 
 	try :
-		logging.warning("Annotation handler not yet implemented")
-		X = float(data[1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-		Y = float(data[2]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
-		angle = float(data[3])*10
+		mark = data[0]
+		X =  float(data[1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
+		Y = -float(data[2]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
+		angle = (float(data[3]) * 10 + 1800) % 3600
 
-		text = data[6]
+		fontSize    = float(data[6].replace('pt', '')) * RELATIVE_OFFSET
 
-		fontSize    = data[6]
-		fontWeight = data[7]
-
-	# 	if data[10] == "comment" or data[5] == "comment":
-	# 		size = 80
-	# 	else :
-	# 		size = float(data[5].replace('pt', ''))*10
-
-
-	# 	kicad_schematic.drawing += f"""
-    #   (text
-    #     "{text}"
-    #     (at {X} {Y} {angle})
-    #     (effects
-    #       (font
-    #         (size {fontSize} {fontWeight})
-    #         [(thickness THICKNESS)]
-    #         [bold]
-    #         [italic]
-    #       )
-    #       [(justify [left | right] [top | bottom] [mirror])]
-    #       [hide]
-    #     )
-    #   )"""
+		text = data[10]
+		kicad_schematic.drawing += f"""
+      (text
+        "{text}"
+        (at {X} {Y} {angle})
+        (effects (font (size {fontSize} {fontSize})))
+      )"""
 	except :
 		logging.exception("failed to add text to schematic")
 

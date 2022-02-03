@@ -19,6 +19,9 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 
 	class kicad_schematic():
 		drawing = ""
+		pinNamesHide = ""
+		pinNumbersHide = ""
+
 	kicad_schematic = kicad_schematic()
 
 	ComponentName = ""
@@ -58,9 +61,8 @@ def create_schematic(schematic_component_uuid, footprint_name, datasheet_link, l
 		kicad_schematic.drawing += """\n    )"""
 
 
-
 	template_lib_component = f"""\
-  (symbol "{ComponentName}" (pin_names (offset 1)) (in_bom yes) (on_board yes)
+  (symbol "{ComponentName}" {kicad_schematic.pinNamesHide} {kicad_schematic.pinNumbersHide} (in_bom yes) (on_board yes)
     (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
