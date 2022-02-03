@@ -37,8 +37,7 @@ This script relies on KicadModTree framework for the footprints generation.
 You can use `pip install KicadModTree==1.1.2` to install it using pip.
 
 ## Notes
-* Even so I tested the script on a lot of components, be careful and always check the output footprint.
-* The schematic generation still has some issues for components with complex geometries, but the pin should be correctly mapped.
+* Even so I tested the script on a lot of components, be careful and always check the output footprint and schematic.
 
 ## License 
 Copyright © 2021 TousstNicolas 
