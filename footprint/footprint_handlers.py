@@ -227,23 +227,33 @@ def h_VIA(data, kicad_mod, footprint_info):
 	logging.warning("VIA not supported. Via are often added for better heat dissipation. Be careful and read datasheet if needed.")
 
 def h_RECT(data, kicad_mod, footprint_info):
+	Xstart = float(mil2mm(data[0]))
+	Ystart = float(mil2mm(data[1]))
+	Xdelta = float(mil2mm(data[2]))
+	Ydelta = float(mil2mm(data[3]))
+	nodes = [[Xstart, Ystart],
+			[Xstart + Xdelta, Ystart],
+			[Xstart + Xdelta, Ystart + Ydelta],
+			[Xstart, Ystart + Ydelta]]
+
+	kicad_mod.append(Polygon(nodes = nodes, layer = layer_correspondance[data[4]]))
 	logging.warning(f"footprint : model not in handler : 'RECT'")
 
 def h_HOLE(data, kicad_mod, footprint_info):
-	center = [mil2mm(data[0]), mil2mm(data[1])]
-	radius = mil2mm(data[2])
-
 	kicad_mod.append(Pad(number = '', 
 						 type = Pad.TYPE_NPTH, 
 						 shape = Pad.SHAPE_CIRCLE,
-						 at = center, 
-						 size = radius * 2, 
+						 at = [mil2mm(data[0]), mil2mm(data[1])], 
+						 size = mil2mm(data[2]) * 2, 
 						 rotation = 0,
-						 drill = radius * 2,
+						 drill = mil2mm(data[2]) * 2,
 						 layers = Pad.LAYERS_NPTH))
 
 def h_TEXT(data, kicad_mod, footprint_info):
-	logging.warning(f"footprint : model not in handler : 'TEXT'")
+	kicad_mod.append(Text(type = 'user',
+					 at = [mil2mm(data[1]), mil2mm(data[2])], 
+					 text = data[8],
+					 layer = layer_correspondance[data[7]]))
 
 handlers = {
 	"TRACK" : h_TRACK, 
