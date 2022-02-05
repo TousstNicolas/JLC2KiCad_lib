@@ -226,6 +226,25 @@ def h_SVGNODE(data, kicad_mod, footprint_info):
 def h_VIA(data, kicad_mod, footprint_info):
 	logging.warning("VIA not supported. Via are often added for better heat dissipation. Be careful and read datasheet if needed.")
 
+def h_RECT(data, kicad_mod, footprint_info):
+	logging.warning(f"footprint : model not in handler : 'RECT'")
+
+def h_HOLE(data, kicad_mod, footprint_info):
+	center = [mil2mm(data[0]), mil2mm(data[1])]
+	radius = mil2mm(data[2])
+
+	kicad_mod.append(Pad(number = '', 
+						 type = Pad.TYPE_NPTH, 
+						 shape = Pad.SHAPE_CIRCLE,
+						 at = center, 
+						 size = radius * 2, 
+						 rotation = 0,
+						 drill = radius * 2,
+						 layers = Pad.LAYERS_NPTH))
+
+def h_TEXT(data, kicad_mod, footprint_info):
+	logging.warning(f"footprint : model not in handler : 'TEXT'")
+
 handlers = {
 	"TRACK" : h_TRACK, 
 	"PAD" : h_PAD, 
@@ -234,4 +253,7 @@ handlers = {
 	"SOLIDREGION" : h_SOLIDREGION, 
 	"SVGNODE" : h_SVGNODE, 
 	"VIA" : h_VIA,
+	"RECT" : h_RECT,
+	"HOLE" : h_HOLE,
+	"TEXT" : h_TEXT,
 }
