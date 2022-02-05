@@ -1,4 +1,5 @@
 import logging
+import re
 
 RELATIVE_OFFSET = 0.1
 ABSOLUTE_OFFSET_X = 40
@@ -61,6 +62,9 @@ def h_P(data, kicad_schematic):
 	"""
 	Add Pin to the schematic
 	"""
+
+	if len(data) == 24 : # sometimes, the rotation parameter is not in the list.  
+		data.insert(5, '0')
 
 	if data[1] == '0':
 		electrical_type = "unspecified"
@@ -187,7 +191,7 @@ def h_PT(data, kicad_schematic):
 	Triangle handler
 	"""
 
-	data[0] = data[0].replace('M ', '').replace('L ', '').replace(' Z ', '')
+	data[0] = data[0].replace('M ', '').replace('L ', '').replace(' Z', '')
 	h_PG(data, kicad_schematic)
 
 def h_A(data, kicad_schematic):
@@ -195,15 +199,99 @@ def h_A(data, kicad_schematic):
 	Arc handler
 	"""
 
-	pathString = data[0].split(" ")
-	Xstart 	= float(pathString[1])  * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-	Ystart 	= float(pathString[2])  * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
-	radius  = float(pathString[4])  * RELATIVE_OFFSET
-	Xend 	= float(pathString[9])  * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-	Yend 	= float(pathString[10]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
+	from  math import sqrt, acos, pi, sin, cos
+	def getCenterParam(match): # please forgive me, I have sinned 
+		e = float([i for i in re.split(r' |,',match[0][1]) if i][0])
+		t = float([i for i in re.split(r' |,',match[0][1]) if i][1])
+		s = float([i for i in re.split(r' |,',match[1][1]) if i][0])
+		l = float([i for i in re.split(r' |,',match[1][1]) if i][1])
+		r = float([i for i in re.split(r' |,',match[1][1]) if i][3])
+		o = float([i for i in re.split(r' |,',match[1][1]) if i][4])
+		n = float([i for i in re.split(r' |,',match[1][1]) if i][5])
+		a = float([i for i in re.split(r' |,',match[1][1]) if i][6])
 
-	Xmid = (Xstart + Xend) / 2
-	Ymid = (Ystart + Yend) / 2 + radius
+		def c(e, t, n, a):
+			i = e * n + t * a
+			r = sqrt((e * e + t * t ) * (n * n + a * a))
+			o = acos(i / r)
+			return  o
+		u = 2 * pi
+		g = 2 * pi
+		h = 2 * pi
+		m = 2 * pi
+		f = 2 * pi
+		if o < 0 :
+			o = -o
+		if s < 0 :
+			s = -s
+		if o == s :
+			l = 0
+		C = sin(l)
+		y = cos(l)
+		b = (e - n) / 2
+		v = (t - a) / 2
+		S = (e + n) / 2
+		P = (t + a) / 2
+		if o < 0.00001 or s < 0.00001:
+			h = c(1, 0, n - e, a - t)
+			return (S, P, h, pi)
+		A = y * b + C * v
+		T = y * v - C * b
+		D = A * A / (o * o) + T * T / (s * s)
+		if D > 1 :
+			o *= sqrt(D)
+			s *= sqrt(D)
+		k = o * s
+		M = o * T
+		I = s * A 
+		L = M * M + I * I
+		if not L :
+			return (S, P, 0, 0)
+		w = (k * k - L) / L
+		w = sqrt(abs(w))
+		O = w * M / s
+		R = -w * I / o
+		u = y * O - C * R + S
+		g = C * O + y * R + P
+		E = (A - O) / o
+		N = (A + O) / o
+		F = (T - R) / s
+		x = (T + R) / s
+		h = c(1, 0, E, F)
+		m = c(E, F, -N, -x)
+		while m > f :
+			m -= f
+		while m < 0 :
+			m += f 
+		if r != 0 :
+			m -= f
+		return (u, g, h, m)
+
+	match = re.findall(r"([MA])([eE ,\-\+.\d]+)", data[0])
+	cx, cy, theta, deltaTheta = getCenterParam(match)	
+	radius  = float([i for i in re.split(r' |,',match[1][1]) if i][0])
+	theta /= 2
+	Xstart = cx + radius * cos(theta)
+	Ystart = -(cy - radius * sin(theta))
+	Xend   = cx + radius * cos(theta + deltaTheta)
+	Yend   = -(cy - radius * sin(theta + deltaTheta))
+	Xmid   = cx + radius * cos(theta +  deltaTheta/2)
+	Ymid   = -(cy - radius * sin(theta + deltaTheta/2))
+	
+	Xstart 	*=  RELATIVE_OFFSET	
+	Ystart 	*=  RELATIVE_OFFSET	
+	Xend 	*=  RELATIVE_OFFSET	
+	Yend 	*=  RELATIVE_OFFSET	
+	Xmid 	*=  RELATIVE_OFFSET	
+	Ymid 	*=  RELATIVE_OFFSET	
+
+	Xstart 	-=  ABSOLUTE_OFFSET_X
+	Ystart 	-=  ABSOLUTE_OFFSET_Y
+	Xend 	-=  ABSOLUTE_OFFSET_X
+	Yend 	-=  ABSOLUTE_OFFSET_Y
+	Xmid 	-=  ABSOLUTE_OFFSET_X
+	Ymid 	-=  ABSOLUTE_OFFSET_Y
+
 
 	kicad_schematic.drawing += f"""
       (arc
