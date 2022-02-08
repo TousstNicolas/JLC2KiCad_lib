@@ -84,7 +84,7 @@ def create_footprint(footprint_component_uuid, component_id, footprint_lib, outp
 
 
 def get_footprint_info(component_id):
-	
+
 	#send request to get assembly process and datasheet_link
 	request_data = '''{}\"currentPage\":1,\"pageSize\":100,
 				\"keyword\":\"{}\",
@@ -102,7 +102,7 @@ def get_footprint_info(component_id):
 		logging.error(f"get_footprint_info request error. Requests returned with error code {response.status_code}")
 		return()
 
-
+	footprint_name = datasheet_link = assembly_process = None
 	footprint_name = response['data']['componentPageInfo']['list'][0]['componentModelEn'].replace(' ', '_').replace('/', '_')
 
 	component_list = response['data']['componentPageInfo']['list']
@@ -121,5 +121,14 @@ def get_footprint_info(component_id):
 			assembly_process = component_data["assemblyProcess"]
 			logging.debug(f"'get_footprint_info : component_data : {component_data}")
 			break
-	
+
+	if not footprint_name :
+		footprint_name = "NoName"
+		logging.warning("Could not retrieve components information from JLCPCB, default name 'NoName'.") 
+	if not datasheet_link :
+		datasheet_link = ""
+		logging.warning("Could not retrieve datasheet link from JLCPCB") 
+	if not assembly_process :
+		assembly_process = ""
+
 	return(footprint_name, datasheet_link, assembly_process)
