@@ -7,9 +7,9 @@ import argparse
 
 from KicadModTree import *
 
-import helper
-from footprint.footprint import create_footprint, get_footprint_info
-from schematic.schematic import create_schematic
+from . import helper
+from .footprint.footprint import create_footprint, get_footprint_info
+from .schematic.schematic import create_schematic
 
 
 def add_component(component_id, args):
@@ -42,8 +42,7 @@ def add_component(component_id, args):
 						 output_dir = args.output_dir)
 
 
-if __name__ == '__main__': 
-
+def main():
 	parser = argparse.ArgumentParser(description="take a JLCPCB part # and create the according component's kicad's library",
 									 epilog = "exemple use : \n	python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib --no_footprint",
 									 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -85,3 +84,6 @@ if __name__ == '__main__':
 
 	for component in args.components:
 		add_component(component, args)
+        
+if __name__ == '__main__': 
+    main()

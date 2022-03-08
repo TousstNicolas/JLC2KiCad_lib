@@ -3,7 +3,7 @@ import json
 import logging
 
 from KicadModTree import *
-from footprint.footprint_handlers import *
+from .footprint_handlers import *
 
 
 

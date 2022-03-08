@@ -5,7 +5,7 @@ import os
 import logging
 
 from KicadModTree import *
-from schematic.schematic_handlers import *
+from .schematic_handlers import *
 
 
 template_lib_header = f"""\

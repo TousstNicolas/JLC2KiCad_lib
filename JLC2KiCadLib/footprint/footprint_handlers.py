@@ -3,7 +3,7 @@ import logging
 from math import pow
 
 from KicadModTree import *
-from footprint.model3d import *
+from .model3d import *
 
 layer_correspondance = {
 	"1": "F.Cu",
