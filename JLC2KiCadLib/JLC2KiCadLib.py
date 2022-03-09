@@ -1,11 +1,7 @@
 import requests
 import json
-import os
 import logging
 import argparse
-
-
-from KicadModTree import *
 
 from . import helper
 from .footprint.footprint import create_footprint, get_footprint_info
