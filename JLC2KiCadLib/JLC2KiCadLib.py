@@ -109,6 +109,7 @@ def main():
 		dest="logging_level",
 		type=str,
 		default="INFO",
+		choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
 		help="set logging level. If DEBUG is used, the debug logs are only written in the log file if the option  --log_file is set ",
 	)
 
