@@ -125,7 +125,7 @@ Shape{{
 	if footprint_info.model_path_relative:
 		dirname = ""
 	else:
-		dirname = os.path.dirname(__file__).replace("\\", "/").replace("/footprint", "") + "/"
+		dirname = os.getcwd().replace("\\", "/").replace("/footprint", "") + "/"
 
 	kicad_mod.append(
 		Model(
@@ -134,3 +134,4 @@ Shape{{
 		)
 	)
 	logging.info(f"added {filename} to footprint")
+
