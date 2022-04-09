@@ -136,6 +136,8 @@ def get_footprint_info(component_id):
 		response["data"]["componentPageInfo"]["list"][0]["componentModelEn"]
 		.replace(" ", "_")
 		.replace("/", "_")
+		.replace("(", "_")
+		.replace("(", "_")
 	)
 
 	component_list = response["data"]["componentPageInfo"]["list"]
