@@ -1,9 +1,9 @@
 import logging
 import re
 
-RELATIVE_OFFSET = 0.1
-ABSOLUTE_OFFSET_X = 40
-ABSOLUTE_OFFSET_Y = -25
+RELATIVE_OFFSET = 0.254
+ABSOLUTE_OFFSET_X = 101.6
+ABSOLUTE_OFFSET_Y = -63.5
 
 
 def h_R(data, kicad_schematic):
@@ -112,8 +112,8 @@ def h_P(data, kicad_schematic):
 		nameSize = float(data[16].replace("pt", "")) * RELATIVE_OFFSET
 		numberSize = float(data[24].replace("pt", "")) * RELATIVE_OFFSET
 	except:
-		nameSize = 0.6
-		numberSize = 0.6
+		nameSize = 1
+		numberSize = 1
 
 	kicad_schematic.drawing += f"""
       (pin {electrical_type} line
