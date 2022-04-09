@@ -284,14 +284,17 @@ def h_HOLE(data, kicad_mod, footprint_info):
 
 
 def h_TEXT(data, kicad_mod, footprint_info):
-	kicad_mod.append(
-		Text(
-			type="user",
-			at=[mil2mm(data[1]), mil2mm(data[2])],
-			text=data[8],
-			layer=layer_correspondance[data[7]],
+	try:
+		kicad_mod.append(
+			Text(
+				type="user",
+				at=[mil2mm(data[1]), mil2mm(data[2])],
+				text=data[8],
+				layer=layer_correspondance[data[7]],
+			)
 		)
-	)
+	except:
+		logging.warning("footprint handler, h_TEXT: failed to add text")
 
 
 handlers = {

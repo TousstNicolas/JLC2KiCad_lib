@@ -134,4 +134,3 @@ Shape{{
 		)
 	)
 	logging.info(f"added {filename} to footprint")
-
