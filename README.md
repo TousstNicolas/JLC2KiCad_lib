@@ -9,9 +9,9 @@ This script requires **Python 3.6** or higher.
 
 easyEDA origin | KiCad result
 ---- | ----
-![JLC1](images/JLC_Schematic_1.png) | ![JLC1](images/KiCad_Schematic_1.png)
-![JLC1](images/JLC_Footprint_1.png) | ![JLC1](images/KiCad_Footprint_1.png)
-![JLC1](images/JLC_3Dmodel.png) | ![JLC1](images/KiCad_3Dmodel.png)
+![JLCSchematic](images/JLC_Schematic_1.png) | ![KiCadSchematic](images/KiCad_Schematic_1.png)
+![JLCFootprint](images/JLC_Footprint_1.png) | ![KiCadFootprint](images/KiCad_Footprint_1.png)
+![JLC3Dmodel](images/JLC_3Dmodel.png) | ![KiCad3Dmodel](images/KiCad_3Dmodel.png)
 
 ## Installation
 
@@ -41,7 +41,7 @@ options:
   --log_file            use --log_file if you want logs to be written in a file
 ```
 
-Example usage : `JLC2KiCadLib.py C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib`
+Example usage : `JLC2KiCadLib C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib`
 
 This example will create the schematic, footprint and 3D model for the two components specified, and will output the schematic in the `./My_lib/Schematic/My_Schematic_lib.lib` file, the footprint and 3D model will be created in the `./My_lib/Footprint`.
 
