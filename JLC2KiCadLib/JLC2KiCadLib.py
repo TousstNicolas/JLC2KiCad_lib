@@ -16,7 +16,7 @@ def add_component(component_id, args):
 	)
 
 	if not data["success"]:
-		logging.error("failed to get component uuid")
+		logging.error("failed to get component uuid\nThe component # is probably wrong. Check a possible typo and try again")
 		return ()
 
 	footprint_component_uuid = data["result"][-1]["component_uuid"]
