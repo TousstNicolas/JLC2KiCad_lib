@@ -16,7 +16,7 @@ def add_component(component_id, args):
 	)
 
 	if not data["success"]:
-		logging.error("failed to get component uuid\nThe component # is probably wrong. Check a possible typo and try again")
+		logging.error(f"failed to get component uuid for {component_id}\nThe component # is probably wrong. Check a possible typo and that the component exists on easyEDA")
 		return ()
 
 	footprint_component_uuid = data["result"][-1]["component_uuid"]
@@ -41,6 +41,7 @@ def add_component(component_id, args):
 			datasheet_link=datasheet_link,
 			library_name=args.schematic_lib,
 			output_dir=args.output_dir,
+			component_id=component_id,
 		)
 
 

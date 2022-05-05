@@ -9,7 +9,7 @@ from .schematic_handlers import *
 
 
 template_lib_header = f"""\
-(kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
+(kicad_symbol_lib (version 05052022) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
 template_lib_footer = """
@@ -17,7 +17,7 @@ template_lib_footer = """
 
 
 def create_schematic(
-	schematic_component_uuid, footprint_name, datasheet_link, library_name, output_dir
+	schematic_component_uuid, footprint_name, datasheet_link, library_name, output_dir, component_id
 ):
 	class kicad_schematic:
 		drawing = ""
@@ -82,6 +82,9 @@ def create_schematic(
     )
     (property "Datasheet" "{datasheet_link}" (id 3) (at -2.286 0.127 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "LCSC" "{component_id}" (id 4) (at 0 0 0)
+      (effects (font (size 1.27 1.27)))
     ){kicad_schematic.drawing}
   )"""
 
