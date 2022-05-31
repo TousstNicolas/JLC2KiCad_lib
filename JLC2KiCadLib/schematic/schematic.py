@@ -9,7 +9,7 @@ from .schematic_handlers import *
 
 
 template_lib_header = f"""\
-(kicad_symbol_lib (version 05052022) (generator TousstNicolas/JLC2KiCad_lib)
+(kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
 template_lib_footer = """
