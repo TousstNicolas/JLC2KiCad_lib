@@ -77,6 +77,7 @@ This script use the [KicadModTree](https://gitlab.com/kicad/libraries/kicad-foot
 ## Notes
 
 * Even so I tested the script on a lot of components, be careful and always check the output footprint and schematic.
+* I consider this project completed. I will continue to maintain it if a bug report is filed, but I will not develop new functionality in the near future. If you feel that an important feature is missing, please open an issue to discuss it, then you can fork this project with a new branch before submitting a PR. 
 
 ## License 
 
