@@ -46,6 +46,7 @@ def add_component(component_id, args):
             library_name=args.schematic_lib,
             output_dir=args.output_dir,
             component_id=component_id,
+            append_numbers=args.append_numbers,
         )
 
 
@@ -107,6 +108,13 @@ def main():
         type=str,
         default="footprint",
         help='set footprint library name,  default is "footprint"',
+    )
+
+    parser.add_argument(
+        "--append_numbers",
+        dest="append_numbers",
+        action="store_true",
+        help="use --append_numbers if you want to append part numbers to names",
     )
 
     parser.add_argument(
