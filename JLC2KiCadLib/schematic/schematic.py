@@ -23,6 +23,7 @@ def create_schematic(
     library_name,
     output_dir,
     component_id,
+    append_numbers,
 ):
     class kicad_schematic:
         drawing = ""
@@ -55,6 +56,8 @@ def create_schematic(
         )
 
         if not ComponentName:
+            if append_numbers:
+                component_title += "_" + component_id
             ComponentName = component_title
             component_title += "_0"
         if (
