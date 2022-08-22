@@ -53,6 +53,7 @@ def create_schematic(
             .replace(" ", "_")
             .replace(".", "_")
         )
+        component_description = data["result"]["description"]
 
         if not ComponentName:
             ComponentName = component_title
@@ -85,7 +86,7 @@ def create_schematic(
     (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "{ComponentName}" (id 1) (at 0 -2.54 0)
+    (property "Value" "{component_description if component_description != "" else ComponentName}" (id 1) (at 0 -2.54 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Footprint" "{footprint_name}" (id 2) (at 0 -10.16 0)
