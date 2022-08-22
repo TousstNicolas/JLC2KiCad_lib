@@ -57,6 +57,7 @@ options:
                         set schematic library name, default is "default_lib"
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
+  --append_numbers      use --append_numbers if you want to append part numbers to names
   -logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
   --log_file            use --log_file if you want logs to be written in a file
