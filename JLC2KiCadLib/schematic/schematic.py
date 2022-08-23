@@ -94,8 +94,11 @@ def create_schematic(
     (property "Datasheet" "{datasheet_link}" (id 3) (at -2.286 0.127 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
+    (property "ki_keywords" "{component_id}" (id 6) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
     (property "LCSC" "{component_id}" (id 4) (at 0 0 0)
-      (effects (font (size 1.27 1.27)))
+      (effects (font (size 1.27 1.27)) hide)
     ){kicad_schematic.drawing}
   )"""
 
