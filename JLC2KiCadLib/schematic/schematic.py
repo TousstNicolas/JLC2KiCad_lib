@@ -33,6 +33,7 @@ def create_schematic(
     kicad_schematic = kicad_schematic()
 
     ComponentName = ""
+    ComponentNameValue = ""
     for component_uuid in schematic_component_uuid:
 
         response = requests.get(f"https://easyeda.com/api/components/{component_uuid}")
@@ -56,6 +57,7 @@ def create_schematic(
         )
 
         if not ComponentName:
+            ComponentNameValue = component_title
             if append_numbers:
                 component_title += "_" + component_id
             ComponentName = component_title
@@ -88,17 +90,20 @@ def create_schematic(
     (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "{ComponentName}" (id 1) (at 0 -2.54 0)
-      (effects (font (size 1.27 1.27)))
+    (property "Value" "{ComponentName}" (id 1) (at 0 -1.27 0)
+      (effects (font (size 1.27 1.27)) {"" if not append_numbers else "hide"})
     )
-    (property "Footprint" "{footprint_name}" (id 2) (at 0 -10.16 0)
+    (property "Footprint" "{footprint_name}" (id 2) (at 0 -13.97 0)
       (effects (font (size 1.27 1.27) italic) hide)
     )
-    (property "Datasheet" "{datasheet_link}" (id 3) (at -2.286 0.127 0)
-      (effects (font (size 1.27 1.27)) (justify left) hide)
+    (property "Datasheet" "{datasheet_link}" (id 3) (at 0 -16.51 0)
+      (effects (font (size 1.27 1.27)) hide)
     )
-    (property "LCSC" "{component_id}" (id 4) (at 0 0 0)
-      (effects (font (size 1.27 1.27)))
+    (property "Name" "{ComponentNameValue}" (id 4) (at 0 -1.27 0)
+      (effects (font (size 1.27 1.27)) {"" if append_numbers else "hide"})
+    )
+    (property "LCSC" "{component_id}" (id 5) (at 0 -6.35 0)
+      (effects (font (size 1.27 1.27)) hide)
     ){kicad_schematic.drawing}
   )"""
 
