@@ -55,7 +55,6 @@ def create_schematic(
             .replace(" ", "_")
             .replace(".", "_")
         )
-        component_description = data["result"]["description"]
 
         if not ComponentName:
             ComponentNameValue = component_title
