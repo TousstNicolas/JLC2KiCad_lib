@@ -15,6 +15,8 @@ template_lib_header = f"""\
 template_lib_footer = """
 )"""
 
+supported_value_types = ["Resistance", "Capacitance", "Inductance"]
+
 
 def create_schematic(
     schematic_component_uuid,
@@ -53,6 +55,11 @@ def create_schematic(
             .replace(" ", "_")
             .replace(".", "_")
         )
+
+        component_types_values = []
+        for value_type in supported_value_types:
+            if value_type in data["result"]["dataStr"]["head"]["c_para"]:
+                component_types_values.append((value_type, data["result"]["dataStr"]["head"]["c_para"][value_type]))
 
         if not ComponentName:
             ComponentName = component_title
@@ -96,7 +103,7 @@ def create_schematic(
     )
     (property "ki_keywords" "{component_id}" (id 6) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
-    )
+    ){"" if not component_types_values else get_type_values_properties(7, component_types_values)}
     (property "LCSC" "{component_id}" (id 4) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     ){kicad_schematic.drawing}
@@ -113,6 +120,17 @@ def create_schematic(
             f.write(template_lib_header)
             f.write(template_lib_footer)
         update_library(library_name, ComponentName, template_lib_component, output_dir)
+
+
+def get_type_values_properties(start_index, component_types_values):
+    output_string = ""
+    for type_value in component_types_values:
+        output_string += (
+            f'{os.linesep}    (property "{type_value[0]}" "{type_value[1]}" (id {start_index}) (at 0 0 0){os.linesep}'
+            f'      (effects (font (size 1.27 1.27)) hide) {os.linesep}'
+            f'    )')
+        start_index += 1
+    return output_string
 
 
 def update_library(library_name, component_title, template_lib_component, output_dir):
