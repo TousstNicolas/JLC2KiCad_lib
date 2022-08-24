@@ -36,12 +36,12 @@ def h_R(data, kicad_schematic):
         Y2 -= ABSOLUTE_OFFSET_Y
 
         kicad_schematic.drawing += f"""
-		(rectangle
-			(start {X1} {Y1})
-			(end {X2} {Y2})
-			(stroke (width 0) (type default) (color 0 0 0 0))
-			(fill (type background))
-		)"""
+      (rectangle
+        (start {X1} {Y1})
+        (end {X2} {Y2})
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )"""
     except Exception:
         logging.error("Schematic : failed to add a rectangle")
 
@@ -316,13 +316,13 @@ def h_A(data, kicad_schematic):
         Ymid -= ABSOLUTE_OFFSET_Y
 
         kicad_schematic.drawing += f"""
-		(arc
-			(start {Xstart} {Ystart})
-			(mid {Xmid} {Ymid})
-			(end {Xend} {Yend})
-			(stroke (width 0) (type default) (color 0 0 0 0))
-			(fill (type none))
-		)"""
+      (arc
+        (start {Xstart} {Ystart})
+        (mid {Xmid} {Ymid})
+        (end {Xend} {Yend})
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )"""
     except Exception:
         logging.error("Schematic : failed to add an arc")
 
