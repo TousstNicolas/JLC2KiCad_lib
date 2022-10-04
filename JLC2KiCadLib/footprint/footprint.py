@@ -12,7 +12,7 @@ def create_footprint(
     component_id,
     footprint_lib,
     output_dir,
-    model_path_relative,
+    model_base_variable,
 ):
     logging.info("creating footprint ...")
 
@@ -26,7 +26,7 @@ def create_footprint(
     kicad_mod.setTags(f"{footprint_name} footprint")
 
     class footprint_info:
-        def __init__(self, footprint_name, output_dir, footprint_lib):
+        def __init__(self, footprint_name, output_dir, footprint_lib, model_base_variable):
             self.max_X, self.max_Y, self.min_X, self.min_Y = (
                 -10000,
                 -10000,
@@ -36,12 +36,13 @@ def create_footprint(
             self.footprint_name = footprint_name
             self.output_dir = output_dir
             self.footprint_lib = footprint_lib
-            self.model_path_relative = model_path_relative
+            self.model_base_variable = model_base_variable
 
     footprint_info = footprint_info(
         footprint_name=footprint_name,
         output_dir=output_dir,
         footprint_lib=footprint_lib,
+        model_base_variable=model_base_variable
     )
 
     # for each line in data : use the appropriate handler

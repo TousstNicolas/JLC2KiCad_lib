@@ -32,7 +32,7 @@ def add_component(component_id, args):
             component_id=component_id,
             footprint_lib=args.footprint_lib,
             output_dir=args.output_dir,
-            model_path_relative=args.model_path_relative,
+            model_base_variable=args.model_base_variable,
         )
     else:
         _, datasheet_link, _ = get_footprint_info(component_id)
@@ -61,7 +61,7 @@ def main():
         metavar="JLCPCB_part_#",
         type=str,
         nargs="+",
-        help="list of JLCPCB part # from the components you want to create",
+            help="list of JLCPCB part # from the components you want to create",
     )
 
     parser.add_argument(
@@ -73,10 +73,11 @@ def main():
     )
 
     parser.add_argument(
-        "--model_path_relative",
-        dest="model_path_relative",
-        action="store_true",
-        help="use --model_path_relative if you want the 3D model to be linked to the footprint using relative instead of absolute path, default is absolute",
+        "-model_base_variable",
+        dest="model_base_variable",
+        type=str,
+        default="",
+        help="use -model_base_variable if you want to specifie the base path of the 3D model using a path variable",
     )
 
     parser.add_argument(
