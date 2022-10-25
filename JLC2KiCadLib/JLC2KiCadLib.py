@@ -35,7 +35,7 @@ def add_component(component_id, args):
             model_base_variable=args.model_base_variable,
         )
     else:
-        _, datasheet_link, _ = get_footprint_info(component_id)
+        _, datasheet_link, _ = get_footprint_info(footprint_component_uuid)
         footprint_name = ""
 
     if args.schematic_creation:
