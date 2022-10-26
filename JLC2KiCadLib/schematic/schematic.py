@@ -153,10 +153,10 @@ def update_library(library_name, component_title, template_lib_component, output
     """
 
     with open(f"{output_dir}/Schematic/{library_name}.kicad_sym", "rb+") as lib_file:
-        pattern = f'  \(symbol "{component_title}" \(pin_names (\n|.)*?\n  \)'
+        pattern = f'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 
-        if f'symbol "{component_title}" (pin_names' in file_content:
+        if f'symbol "{component_title}"' in file_content:
             # use regex to find the old component template in the file and replace it with the new one
             logging.info(
                 f"found component already in {library_name}, updating {library_name}"
