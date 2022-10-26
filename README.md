@@ -49,8 +49,8 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -dir OUTPUT_DIR       base directory for output library files
-  --model_path_relative
-                        use --model_path_relative if you want the 3D model to be linked to the footprint using relative instead of absolute path, default is absolute
+  -model_base_variable MODEL_BASE_VARIABLE
+                        use -model_base_variable if you want to specifie the base path of the 3D model using a path variable
   --no_footprint        use --no_footprint if you do not want to create the footprint
   --no_schematic        use --no_schematic if you do not want to create the schematic
   -schematic_lib SCHEMATIC_LIB
