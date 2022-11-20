@@ -33,6 +33,7 @@ def add_component(component_id, args):
             footprint_lib=args.footprint_lib,
             output_dir=args.output_dir,
             model_base_variable=args.model_base_variable,
+            skip_existing=args.skip_existing,
         )
     else:
         _, datasheet_link, _ = get_footprint_info(footprint_component_uuid)
@@ -46,6 +47,7 @@ def add_component(component_id, args):
             library_name=args.schematic_lib,
             output_dir=args.output_dir,
             component_id=component_id,
+            skip_existing=args.skip_existing,
         )
 
 
@@ -125,6 +127,15 @@ def main():
         action="store_true",
         help="use --log_file if you want logs to be written in a file",
     )
+
+
+    parser.add_argument( # argument for skip already existing files and schematic symbols
+        "--skip_existing",
+        dest="skip_existing",
+        action="store_true",
+        help="use --skip_existing if you want to skip already existing files and schematic symbols",
+    )
+
 
     args = parser.parse_args()
 

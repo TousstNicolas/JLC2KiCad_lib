@@ -13,12 +13,19 @@ def create_footprint(
     footprint_lib,
     output_dir,
     model_base_variable,
+    skip_existing
 ):
     logging.info("creating footprint ...")
 
     footprint_name, datasheet_link, footprint_shape = get_footprint_info(
         footprint_component_uuid
     )
+
+    if skip_existing:
+        # check if footprint already exists:
+        if os.path.isfile(os.path.join(output_dir, footprint_lib, footprint_name + ".kicad_mod")):
+            logging.info(f"Footprint {footprint_name} already exists, skipping.")
+            return f"{footprint_lib}:{footprint_name}", datasheet_link
 
     # init kicad footprint
     kicad_mod = Footprint(f'"{footprint_name}"')
