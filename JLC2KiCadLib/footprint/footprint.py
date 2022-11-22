@@ -135,7 +135,12 @@ def get_footprint_info(footprint_component_uuid):
         return ()
 
     footprint_shape = data["result"]["dataStr"]["shape"]
-    datasheet_link = data["result"]["dataStr"]["head"]["c_para"]["link"]
+    try:
+        datasheet_link = data["result"]["dataStr"]["head"]["c_para"]["link"]
+    except:
+        datasheet_link = ""
+        logging.warning("Could not retrieve datasheet link from EASYEDA")
+
     footprint_name = (
         data["result"]["title"]
         .replace(" ", "_")
@@ -149,8 +154,5 @@ def get_footprint_info(footprint_component_uuid):
         logging.warning(
             "Could not retrieve components information from EASYEDA, default name 'NoName'."
         )
-    if not datasheet_link:
-        datasheet_link = ""
-        logging.warning("Could not retrieve datasheet link from EASYEDA")
 
     return (footprint_name, datasheet_link, footprint_shape)
