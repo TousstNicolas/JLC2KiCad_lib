@@ -179,7 +179,7 @@ def update_library(library_name, component_title, template_lib_component, output
         else:
             # move before the library footer and write the component template
             # find the last occurence of the footer
-            last_footer_index = file_content.rfind(")")
+            last_footer_index = file_content.rfind(template_lib_footer) 
             lib_file.seek(last_footer_index)
             lib_file.truncate()
             lib_file.write(template_lib_component.encode())
