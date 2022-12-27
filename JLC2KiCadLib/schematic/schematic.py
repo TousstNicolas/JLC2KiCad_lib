@@ -12,8 +12,7 @@ template_lib_header = f"""\
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
-template_lib_footer = """
-)"""
+template_lib_footer = ")"
 
 supported_value_types = [
     "Resistance",
@@ -123,7 +122,8 @@ def create_schematic(
       (effects (font (size 1.27 1.27)) hide)
     )
     {get_type_values_properties(6, component_types_values)}{kicad_schematic.drawing}
-  )"""
+  )
+"""
 
     if not os.path.exists(f"{output_dir}/Schematic"):
         os.makedirs(f"{output_dir}/Schematic")
@@ -154,7 +154,7 @@ def update_library(library_name, component_title, template_lib_component, output
     if component is already in library,
     the library will be updated,
     if not already present in library,
-    the component will be added at the beginning
+    the component will be added at the end
     """
 
     with open(f"{output_dir}/Schematic/{library_name}.kicad_sym", "rb+") as lib_file:
@@ -182,9 +182,6 @@ def update_library(library_name, component_title, template_lib_component, output
             lib_file.write(sub.encode())
         else:
             # move before the library footer and write the component template
-            # find the last occurence of the footer
-            last_footer_index = file_content.rfind(template_lib_footer) 
-            lib_file.seek(last_footer_index)
-            lib_file.truncate()
+            lib_file.seek(-len(template_lib_footer), 2)
             lib_file.write(template_lib_component.encode())
             lib_file.write(template_lib_footer.encode())
