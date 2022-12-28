@@ -81,11 +81,15 @@ def create_schematic(
         ):
             continue
 
+        # if library_name is not defined, use component_title as library name
+        if not library_name:
+            library_name = ComponentName
+
         filename = f"{output_dir}/Schematic/" + library_name + ".kicad_sym"
 
         logging.info(f"creating schematic {component_title} in {library_name}")
 
-        kicad_schematic.drawing += f'''\n    (symbol "{component_title}_0"'''
+        kicad_schematic.drawing += f'''\n    (symbol "{component_title}_1"'''
         for line in schematic_shape:
             args = [
                 i for i in line.split("~") if i
