@@ -100,7 +100,7 @@ def main():
         "-schematic_lib",
         dest="schematic_lib",
         type=str,
-        default="default_lib",
+        default=None,
         help='set schematic library name, default is "default_lib"',
     )
 
