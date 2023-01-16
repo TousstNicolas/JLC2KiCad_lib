@@ -145,10 +145,10 @@ def h_PAD(data, kicad_mod, footprint_info):
         return ()
 
     # update footprint borders
-    footprint_info.max_X = max(footprint_info.max_X, data[1])
-    footprint_info.min_X = min(footprint_info.min_X, data[1])
-    footprint_info.max_Y = max(footprint_info.max_Y, data[2])
-    footprint_info.min_Y = min(footprint_info.min_Y, data[2])
+    footprint_info.pad_max_X = max(footprint_info.pad_max_X, data[1])
+    footprint_info.pad_min_X = min(footprint_info.pad_min_X, data[1])
+    footprint_info.pad_max_Y = max(footprint_info.pad_max_Y, data[2])
+    footprint_info.pad_min_Y = min(footprint_info.pad_min_Y, data[2])
 
     kicad_mod.append(
         Pad(
@@ -274,13 +274,21 @@ def h_SOLIDREGION(data, kicad_mod, footprint_info):
 
 def h_SVGNODE(data, kicad_mod, footprint_info):
     # create 3D model as a WRL file
-
+    # parse json data
+    try:
+        data = json.loads(data[0])
+    except Exception:
+        logging.exception("footprint handler, h_SVGNODE : failed to parse json data")
+        return ()
+    c_origin = data["attrs"]["c_origin"].split(",")
     get_3Dmodel(
-        component_uuid=json.loads(data[0])["attrs"]["uuid"],
+        component_uuid=data["attrs"]["uuid"],
         footprint_info=footprint_info,
         kicad_mod=kicad_mod,
-        translationZ=json.loads(data[0])["attrs"]["z"],
-        rotation=json.loads(data[0])["attrs"]["c_rotation"],
+        translationX=float(c_origin[0]),
+        translationY=float(c_origin[1]),
+        translationZ=data["attrs"]["z"],
+        rotation=data["attrs"]["c_rotation"],
     )
 
 

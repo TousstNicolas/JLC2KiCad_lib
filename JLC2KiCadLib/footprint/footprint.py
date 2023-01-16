@@ -33,6 +33,7 @@ def create_footprint(
                 10000,
                 10000,
             )  # I will be using these to calculate the bounding box because the node.calculateBoundingBox() method does not seems to work for me
+            self.pad_max_X, self.pad_max_Y, self.pad_min_X, self.pad_min_Y = (-10000, -10000, 10000, 10000,)
             self.footprint_name = footprint_name
             self.output_dir = output_dir
             self.footprint_lib = footprint_lib
@@ -93,12 +94,23 @@ def create_footprint(
     )
 
     # translate the footprint to be centered around 0,0
-    kicad_mod.insert(
-        Translation(
-            -(footprint_info.min_X + footprint_info.max_X) / 2,
-            -(footprint_info.min_Y + footprint_info.max_Y) / 2,
+    if (footprint_info.pad_max_X, footprint_info.pad_max_Y, footprint_info.pad_min_X, footprint_info.pad_min_Y) == (
+            -10000, -10000, 10000, 10000,):
+        # footprint has not pads use all geometry:
+        kicad_mod.insert(
+            Translation(
+                -(footprint_info.min_X + footprint_info.max_X) / 2,
+                -(footprint_info.min_Y + footprint_info.max_Y) / 2,
+            )
         )
-    )
+    else:
+        # footprint has pads use only pads coordinates:
+        kicad_mod.insert(
+            Translation(
+                -(footprint_info.pad_min_X + footprint_info.pad_max_X) / 2,
+                -(footprint_info.pad_min_Y + footprint_info.pad_max_Y) / 2,
+            )
+        )
 
     if not os.path.exists(f"{output_dir}/{footprint_lib}"):
         os.makedirs(f"{output_dir}/{footprint_lib}")
