@@ -60,6 +60,7 @@ options:
   -logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
   --log_file            use --log_file if you want logs to be written in a file
+  --skip_existing       use --skip_existing if you want to skip the creation of a symbol/footprint if they already exist
 ```
 
 Example usage : `JLC2KiCadLib C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib`

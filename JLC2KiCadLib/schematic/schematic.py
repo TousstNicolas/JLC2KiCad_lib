@@ -12,8 +12,7 @@ template_lib_header = f"""\
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
-template_lib_footer = """
-)"""
+template_lib_footer = ")"
 
 supported_value_types = [
     "Resistance",
@@ -30,6 +29,7 @@ def create_schematic(
     library_name,
     output_dir,
     component_id,
+    skip_existing
 ):
     class kicad_schematic:
         drawing = ""
@@ -80,11 +80,15 @@ def create_schematic(
         ):
             continue
 
+        # if library_name is not defined, use component_title as library name
+        if not library_name:
+            library_name = ComponentName
+
         filename = f"{output_dir}/Schematic/" + library_name + ".kicad_sym"
 
         logging.info(f"creating schematic {component_title} in {library_name}")
 
-        kicad_schematic.drawing += f'''\n    (symbol "{component_title}_0"'''
+        kicad_schematic.drawing += f'''\n    (symbol "{component_title}_1"'''
         for line in schematic_shape:
             args = [
                 i for i in line.split("~") if i
@@ -118,19 +122,20 @@ def create_schematic(
       (effects (font (size 1.27 1.27)) hide)
     )
     {get_type_values_properties(6, component_types_values)}{kicad_schematic.drawing}
-  )"""
+  )
+"""
 
     if not os.path.exists(f"{output_dir}/Schematic"):
         os.makedirs(f"{output_dir}/Schematic")
 
     if os.path.exists(filename):
-        update_library(library_name, ComponentName, template_lib_component, output_dir)
+        update_library(library_name, ComponentName, template_lib_component, output_dir, skip_existing)
     else:
         with open(filename, "w") as f:
             logging.info(f"writing in {filename} file")
             f.write(template_lib_header)
             f.write(template_lib_footer)
-        update_library(library_name, ComponentName, template_lib_component, output_dir)
+        update_library(library_name, ComponentName, template_lib_component, output_dir, skip_existing)
 
 
 def get_type_values_properties(start_index, component_types_values):
@@ -144,12 +149,12 @@ def get_type_values_properties(start_index, component_types_values):
     )
 
 
-def update_library(library_name, component_title, template_lib_component, output_dir):
+def update_library(library_name, component_title, template_lib_component, output_dir, skip_existing):
     """
     if component is already in library,
     the library will be updated,
     if not already present in library,
-    the component will be added at the beginning
+    the component will be added at the end
     """
 
     with open(f"{output_dir}/Schematic/{library_name}.kicad_sym", "rb+") as lib_file:
@@ -157,6 +162,9 @@ def update_library(library_name, component_title, template_lib_component, output
         file_content = lib_file.read().decode()
 
         if f'symbol "{component_title}"' in file_content:
+            if skip_existing:
+                logging.info(f"component {component_title} already in schematics library, skipping")
+                return
             # use regex to find the old component template in the file and replace it with the new one
             logging.info(
                 f"found component already in {library_name}, updating {library_name}"
@@ -175,6 +183,5 @@ def update_library(library_name, component_title, template_lib_component, output
         else:
             # move before the library footer and write the component template
             lib_file.seek(-len(template_lib_footer), 2)
-            lib_file.truncate()
             lib_file.write(template_lib_component.encode())
             lib_file.write(template_lib_footer.encode())
