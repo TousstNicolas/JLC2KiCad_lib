@@ -108,7 +108,6 @@ def h_PAD(data, kicad_mod, footprint_info):
         rotation = float(data[9])
 
     if data[5] == "1":
-
         drill_size = 1
         pad_type = Pad.TYPE_SMT
         pad_layer = Pad.LAYERS_SMT
@@ -125,7 +124,7 @@ def h_PAD(data, kicad_mod, footprint_info):
         if data[11] == 0:
             drill_size = data[7] * 2
         elif (data[7] * 2 < data[11]) ^ (
-                size[0] > size[1]
+            size[0] > size[1]
         ):  # invert the orientation of the drill hole if not in the same orientation as the pad shape
             drill_size = [data[7] * 2, data[11]]
         else:
@@ -134,8 +133,9 @@ def h_PAD(data, kicad_mod, footprint_info):
     elif data[5] == "11" and shape == "SHAPE_CIRCLE":
         pad_type = Pad.TYPE_THT
         pad_layer = Pad.LAYERS_THT
+
     elif data[5] == "11" and shape == "SHAPE_RECT":
-        if data[11] == 0:  # Check if the hole is oval
+        if float(data[11]) == 0:  # Check if the hole is oval
             pass
         else:
             drill_size = [drill_size, mil2mm(data[11])]
@@ -213,22 +213,22 @@ def h_ARC(data, kicad_mod, footprint_info):
         midpoint = [end[0] + midX, end[1] + midY]
 
         sq1 = (
-                pow(midpoint[0], 2)
-                + pow(midpoint[1], 2)
-                - pow(start[0], 2)
-                - pow(start[1], 2)
+            pow(midpoint[0], 2)
+            + pow(midpoint[1], 2)
+            - pow(start[0], 2)
+            - pow(start[1], 2)
         )
         sq2 = pow(end[0], 2) + pow(end[1], 2) - pow(start[0], 2) - pow(start[1], 2)
 
         centerX = ((start[1] - end[1]) / (start[1] - midpoint[1]) * sq1 - sq2) / (
-                2 * (start[0] - end[0])
-                - 2
-                * (start[0] - midpoint[0])
-                * (start[1] - end[1])
-                / (start[1] - midpoint[1])
+            2 * (start[0] - end[0])
+            - 2
+            * (start[0] - midpoint[0])
+            * (start[1] - end[1])
+            / (start[1] - midpoint[1])
         )
         centerY = -(2 * (start[0] - midpoint[0]) * centerX + sq1) / (
-                2 * (start[1] - midpoint[1])
+            2 * (start[1] - midpoint[1])
         )
         center = [centerX, centerY]
 
@@ -249,7 +249,7 @@ def h_CIRCLE(data, kicad_mod, footprint_info):
     # append a Circle to the footprint
 
     if (
-            data[4] == "100"
+        data[4] == "100"
     ):  # they want to draw a circle on pads, we don't want that. This is an empirical deduction, no idea if this is correct, but it seems to work on my tests
         return ()
 
