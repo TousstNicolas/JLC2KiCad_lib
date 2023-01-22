@@ -89,6 +89,7 @@ def create_schematic(
         logging.info(f"creating schematic {component_title} in {library_name}")
 
         kicad_schematic.drawing += f'''\n    (symbol "{component_title}_1"'''
+
         for line in schematic_shape:
             args = [
                 i for i in line.split("~") if i
@@ -98,7 +99,14 @@ def create_schematic(
             if model not in handlers:
                 logging.warning("Schematic : parsing model not in handler : " + model)
             else:
-                handlers.get(model)(args[1:], kicad_schematic)
+                handlers.get(model)(
+                    data=args[1:],
+                    translation=(
+                        data["result"]["dataStr"]["head"]["x"],
+                        data["result"]["dataStr"]["head"]["y"],
+                    ),
+                    kicad_schematic=kicad_schematic,
+                )
         kicad_schematic.drawing += """\n    )"""
 
     template_lib_component = f"""\

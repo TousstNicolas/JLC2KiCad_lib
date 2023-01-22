@@ -8,7 +8,11 @@ ABSOLUTE_OFFSET_Y = -63.5
 __all__ = ["handlers", "h_R", "h_E", "h_P", "h_T", "h_PL", "h_PG", "h_PT", "h_A"]
 
 
-def h_R(data, kicad_schematic):
+def mil2mm(data):
+    return float(data) / 3.937
+
+
+def h_R(data, translation, kicad_schematic):
     """
     Rectangle handler
     """
@@ -25,15 +29,10 @@ def h_R(data, kicad_schematic):
             X2 = float(X1) + float(data[2])
             Y2 = float(Y1) + float(data[3])
 
-        X1 *= RELATIVE_OFFSET
-        Y1 *= -RELATIVE_OFFSET
-        X2 *= RELATIVE_OFFSET
-        Y2 *= -RELATIVE_OFFSET
-
-        X1 -= ABSOLUTE_OFFSET_X
-        Y1 -= ABSOLUTE_OFFSET_Y
-        X2 -= ABSOLUTE_OFFSET_X
-        Y2 -= ABSOLUTE_OFFSET_Y
+        X1 = mil2mm(X1 - translation[0])
+        Y1 = -mil2mm(Y1 - translation[1])
+        X2 = mil2mm(X2 - translation[0])
+        Y2 = -mil2mm(Y2 - translation[1])
 
         kicad_schematic.drawing += f"""
       (rectangle
@@ -42,19 +41,22 @@ def h_R(data, kicad_schematic):
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type background))
       )"""
-    except Exception:
+    except Exception as e:
+        print(e)
         logging.error("Schematic : failed to add a rectangle")
 
 
-def h_E(data, kicad_schematic):
+def h_E(data, translation, kicad_schematic):
     """
     Circle
     """
 
     try:
-        X1 = float(data[0]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-        Y1 = -float(data[1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
-        radius = float(data[2]) * RELATIVE_OFFSET
+
+        X1 = mil2mm(float(data[0]) - translation[0])
+        Y1 = -mil2mm(float(data[1]) - translation[1])
+        radius = mil2mm(float(data[2]))
+
         kicad_schematic.drawing += f"""
       (circle
         (center {X1} {Y1})
@@ -62,11 +64,12 @@ def h_E(data, kicad_schematic):
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type background))
       )"""
-    except Exception:
+    except Exception as e:
+        print(e)
         logging.error("schematic : failed to add circle")
 
 
-def h_P(data, kicad_schematic):
+def h_P(data, translation, kicad_schematic):
     """
     Add Pin to the schematic
     """
@@ -92,8 +95,8 @@ def h_P(data, kicad_schematic):
     pinNumber = data[2]
     pinName = data[13]
 
-    X = float(data[3]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-    Y = -float(data[4]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
+    X = mil2mm(float(data[3]) - translation[0])
+    Y = -mil2mm(float(data[4]) - translation[1])
 
     if data[5] in ["0", "90", "180", "270"]:
         rotation = (int(data[5]) + 180) % 360
@@ -104,9 +107,9 @@ def h_P(data, kicad_schematic):
         )
 
     if rotation == 0 or rotation == 180:
-        length = abs(float(data[8].split("h")[-1])) * RELATIVE_OFFSET
+        length = mil2mm(abs(float(data[8].split("h")[-1])))
     elif rotation == 90 or rotation == 270:
-        length = abs(float(data[8].split("v")[-1])) * RELATIVE_OFFSET
+        length = mil2mm(abs(float(data[8].split("v")[-1])))
 
     try:
         if not kicad_schematic.pinNamesHide and data[9].split("^^")[1] == "0":
@@ -114,8 +117,8 @@ def h_P(data, kicad_schematic):
         if not kicad_schematic.pinNumbersHide and data[17].split("^^")[1] == "0":
             kicad_schematic.pinNumbersHide = "(pin_numbers hide)"
 
-        nameSize = float(data[16].replace("pt", "")) * RELATIVE_OFFSET
-        numberSize = float(data[24].replace("pt", "")) * RELATIVE_OFFSET
+        nameSize = mil2mm(float(data[16].replace("pt", "")))
+        numberSize = mil2mm(float(data[24].replace("pt", "")))
     except Exception:
         nameSize = 1
         numberSize = 1
@@ -129,17 +132,17 @@ def h_P(data, kicad_schematic):
       )"""
 
 
-def h_T(data, kicad_schematic):
+def h_T(data, translation, kicad_schematic):
     """
     Annotation handler
     """
 
     try:
-        X = float(data[1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X
-        Y = -float(data[2]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y
+        X = mil2mm(float(data[1]) - translation[0])
+        Y = -mil2mm(float(data[2]) - translation[1])
         angle = (float(data[3]) * 10 + 1800) % 3600
 
-        fontSize = float(data[6].replace("pt", "")) * RELATIVE_OFFSET
+        fontSize = mil2mm(float(data[6].replace("pt", "")))
 
         text = data[10]
         kicad_schematic.drawing += f"""
@@ -152,7 +155,7 @@ def h_T(data, kicad_schematic):
         logging.error("failed to add text to schematic")
 
 
-def h_PL(data, kicad_schematic):
+def h_PL(data, translation, kicad_schematic):
     """
     Polygone handler
     """
@@ -162,7 +165,7 @@ def h_PL(data, kicad_schematic):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {float(pathString[2*i]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X} {-float(pathString[2*i+1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y})"
+                f"(xy {mil2mm(float(pathString[2*i]) - translation[0])} {- mil2mm(float(pathString[2*i+1]) - translation[-1])})"
             )
         polystr = "\n          ".join(polypts)
 
@@ -178,7 +181,7 @@ def h_PL(data, kicad_schematic):
         logging.error("Schematic : failed to add a polygone")
 
 
-def h_PG(data, kicad_schematic):
+def h_PG(data, translation, kicad_schematic):
     """
     Closed polygone handler
     """
@@ -188,7 +191,7 @@ def h_PG(data, kicad_schematic):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {float(pathString[2*i]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_X} {-float(pathString[2*i+1]) * RELATIVE_OFFSET - ABSOLUTE_OFFSET_Y})"
+                f"(xy {mil2mm(float(pathString[2*i]) - translation[0])} {- mil2mm(float(pathString[2*i+1]) - translation[1])})"
             )
         polypts.append(polypts[0])
         polystr = "\n          ".join(polypts)
@@ -205,19 +208,19 @@ def h_PG(data, kicad_schematic):
         logging.error("Schematic : failed to add a polygone")
 
 
-def h_PT(data, kicad_schematic):
+def h_PT(data, translation, kicad_schematic):
     """
     Triangle handler
     """
 
     try:
         data[0] = data[0].replace("M ", "").replace("L ", "").replace(" Z", "")
-        h_PG(data, kicad_schematic)
+        h_PG(data, translation, kicad_schematic)
     except Exception:
         logging.error("Schematic : failed to add a triangle")
 
 
-def h_A(data, kicad_schematic):
+def h_A(data, translation, kicad_schematic):
     """
     Arc handler
     """
@@ -301,19 +304,12 @@ def h_A(data, kicad_schematic):
         Xmid = cx + radius * cos(theta + deltaTheta / 2)
         Ymid = -(cy - radius * sin(theta + deltaTheta / 2))
 
-        Xstart *= RELATIVE_OFFSET
-        Ystart *= RELATIVE_OFFSET
-        Xend *= RELATIVE_OFFSET
-        Yend *= RELATIVE_OFFSET
-        Xmid *= RELATIVE_OFFSET
-        Ymid *= RELATIVE_OFFSET
-
-        Xstart -= ABSOLUTE_OFFSET_X
-        Ystart -= ABSOLUTE_OFFSET_Y
-        Xend -= ABSOLUTE_OFFSET_X
-        Yend -= ABSOLUTE_OFFSET_Y
-        Xmid -= ABSOLUTE_OFFSET_X
-        Ymid -= ABSOLUTE_OFFSET_Y
+        Xstart = mil2mm(Xstart - translation[0])
+        Ystart = -mil2mm(Ystart - translation[1])
+        Xend = mil2mm(Xend - translation[0])
+        Yend = -mil2mm(Yend - translation[1])
+        Xmid = mil2mm(Xmid - translation[0])
+        Ymid = -mil2mm(Ymid - translation[1])
 
         kicad_schematic.drawing += f"""
       (arc
