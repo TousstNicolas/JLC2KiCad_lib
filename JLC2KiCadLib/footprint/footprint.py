@@ -17,7 +17,7 @@ def create_footprint(
 ):
     logging.info("creating footprint ...")
 
-    footprint_name, datasheet_link, footprint_shape = get_footprint_info(
+    footprint_name, datasheet_link, footprint_shape, (x, y) = get_footprint_info(
         footprint_component_uuid
     )
 
@@ -33,24 +33,25 @@ def create_footprint(
     kicad_mod.setTags(f"{footprint_name} footprint")
 
     class footprint_info:
-        def __init__(self, footprint_name, output_dir, footprint_lib, model_base_variable):
+        def __init__(self, footprint_name, output_dir, footprint_lib, model_base_variable, origin):
             self.max_X, self.max_Y, self.min_X, self.min_Y = (
                 -10000,
                 -10000,
                 10000,
                 10000,
             )  # I will be using these to calculate the bounding box because the node.calculateBoundingBox() method does not seems to work for me
-            self.pad_max_X, self.pad_max_Y, self.pad_min_X, self.pad_min_Y = (-10000, -10000, 10000, 10000,)
             self.footprint_name = footprint_name
             self.output_dir = output_dir
             self.footprint_lib = footprint_lib
             self.model_base_variable = model_base_variable
+            self.origin = origin
 
     footprint_info = footprint_info(
         footprint_name=footprint_name,
         output_dir=output_dir,
         footprint_lib=footprint_lib,
-        model_base_variable=model_base_variable
+        model_base_variable=model_base_variable,
+        origin=(x, y)
     )
 
     # for each line in data : use the appropriate handler
@@ -100,24 +101,12 @@ def create_footprint(
         )
     )
 
-    # translate the footprint to be centered around 0,0
-    if (footprint_info.pad_max_X, footprint_info.pad_max_Y, footprint_info.pad_min_X, footprint_info.pad_min_Y) == (
-            -10000, -10000, 10000, 10000,):
-        # footprint has not pads use all geometry:
-        kicad_mod.insert(
-            Translation(
-                -(footprint_info.min_X + footprint_info.max_X) / 2,
-                -(footprint_info.min_Y + footprint_info.max_Y) / 2,
-            )
+
+    kicad_mod.insert(
+        Translation(-mil2mm(x),
+                    -mil2mm(y)
         )
-    else:
-        # footprint has pads use only pads coordinates:
-        kicad_mod.insert(
-            Translation(
-                -(footprint_info.pad_min_X + footprint_info.pad_max_X) / 2,
-                -(footprint_info.pad_min_Y + footprint_info.pad_max_Y) / 2,
-            )
-        )
+    )
 
     if not os.path.exists(f"{output_dir}/{footprint_lib}"):
         os.makedirs(f"{output_dir}/{footprint_lib}")
@@ -147,6 +136,8 @@ def get_footprint_info(footprint_component_uuid):
         return ()
 
     footprint_shape = data["result"]["dataStr"]["shape"]
+    x = data["result"]["dataStr"]["head"]["x"]
+    y = data["result"]["dataStr"]["head"]["y"]
     try:
         datasheet_link = data["result"]["dataStr"]["head"]["c_para"]["link"]
     except:
@@ -167,4 +158,4 @@ def get_footprint_info(footprint_component_uuid):
             "Could not retrieve components information from EASYEDA, default name 'NoName'."
         )
 
-    return (footprint_name, datasheet_link, footprint_shape)
+    return (footprint_name, datasheet_link, footprint_shape,(x,y))

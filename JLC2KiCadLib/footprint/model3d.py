@@ -118,19 +118,30 @@ Shape{{
 
         wrl_content += shape_str
 
-        # find the lowest point of the model
-        lowest_point = 0
-        for point in vertices:
-            if float(point.split(" ")[2]) < lowest_point:
-                lowest_point = float(point.split(" ")[2])
+    # find the lowest point of the model
+    lowest_point = 0
+    for point in vertices:
+        if float(point.split(" ")[2]) < lowest_point:
+            lowest_point = float(point.split(" ")[2])
 
-        # convert lowest point to mm
-        min_z = lowest_point * 2.54
+    # convert lowest point to mm
+    min_z = lowest_point * 2.54
 
-        # calculate the translation Z value
-        from .footprint_handlers import mil2mm
-        Zmm = mil2mm(translationZ)
-        translation_z = Zmm - min_z
+    # calculate the translation Z value
+    from .footprint_handlers import mil2mm
+    Zmm = mil2mm(translationZ)
+    translation_z = Zmm - min_z
+
+    # find the x and y middle of the model
+    x_list = []
+    y_list = []
+    for point in vertices:
+        x_list.append(float(point.split(" ")[0]))
+        y_list.append(float(point.split(" ")[1]))
+    x_middle = (max(x_list) + min(x_list)) / 2
+    y_middle = (max(y_list) + min(y_list)) / 2
+
+
 
 
     if not os.path.exists(
@@ -155,36 +166,18 @@ Shape{{
         path_name = f'{dirname}/{filename}'
 
         # Calculate the translation between the center of the pads and the center of the whole footprint
+    translation_x = translationX-footprint_info.origin[0]
+    translation_y = translationY-footprint_info.origin[1]
 
-    translation_x = 0
-    translation_y = 0
-
-    # Check if the footprint pads are alreay added to the footprint
-    if (footprint_info.pad_max_X, footprint_info.pad_max_Y, footprint_info.pad_min_X, footprint_info.pad_min_Y) != (
-            -10000, -10000, 10000, 10000,):
-        # Calculate the center of the pads
-        translation_x = (footprint_info.pad_max_X + footprint_info.pad_min_X) / 2
-        translation_y = (footprint_info.pad_max_Y + footprint_info.pad_min_Y) / 2
-        translation_x -= mil2mm(translationX)
-        translation_y -= mil2mm(translationY)
-
-    elif (footprint_info.max_X, footprint_info.max_Y, footprint_info.min_X, footprint_info.min_Y) != (
-            -10000, -10000, 10000, 10000,):
-        # Calculate the center of the footprint
-        translation_x = (footprint_info.max_X + footprint_info.min_X) / 2
-        translation_y = (footprint_info.max_Y + footprint_info.min_Y) / 2
-        # Calculate the translation between the center of the pads and the center of the whole footprint
-        translation_x -= mil2mm(translationX)
-        translation_y -= mil2mm(translationY)
         # Convert to inches
-    translation_x = translation_x / 25.4
-    translation_y = translation_y / 25.4
-    translation_z = translation_z / 25.4
+    translation_x_inches = translation_x/ 100 + x_middle/10
+    translation_y_inches = -translation_y/ 100 - y_middle/10
+    translation_z_inches = translation_z / 25.4
 
     kicad_mod.append(
         Model(
             filename=path_name,
-            at=[translation_x, translation_y, translation_z],
+            at=[translation_x_inches, translation_y_inches, translation_z_inches],
             rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
         )
     )

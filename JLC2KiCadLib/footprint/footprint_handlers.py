@@ -17,6 +17,7 @@ __all__ = [
     "h_RECT",
     "h_HOLE",
     "h_TEXT",
+    "mil2mm",
 ]
 
 layer_correspondance = {
@@ -36,7 +37,7 @@ layer_correspondance = {
 
 
 def mil2mm(data):
-    return float(data) / 3.937
+    return float(data) * 0.254
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
@@ -143,12 +144,6 @@ def h_PAD(data, kicad_mod, footprint_info):
             f"footprint handler, pad : unknown assembly_process skiping pad n° : {pad_number}"
         )
         return ()
-
-    # update footprint borders
-    footprint_info.pad_max_X = max(footprint_info.pad_max_X, data[1])
-    footprint_info.pad_min_X = min(footprint_info.pad_min_X, data[1])
-    footprint_info.pad_max_Y = max(footprint_info.pad_max_Y, data[2])
-    footprint_info.pad_min_Y = min(footprint_info.pad_min_Y, data[2])
 
     kicad_mod.append(
         Pad(
