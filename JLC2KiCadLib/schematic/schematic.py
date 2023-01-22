@@ -29,7 +29,7 @@ def create_schematic(
     library_name,
     output_dir,
     component_id,
-    skip_existing
+    skip_existing,
 ):
     class kicad_schematic:
         drawing = ""
@@ -89,6 +89,7 @@ def create_schematic(
         logging.info(f"creating schematic {component_title} in {library_name}")
 
         kicad_schematic.drawing += f'''\n    (symbol "{component_title}_1"'''
+
         for line in schematic_shape:
             args = [
                 i for i in line.split("~") if i
@@ -98,7 +99,14 @@ def create_schematic(
             if model not in handlers:
                 logging.warning("Schematic : parsing model not in handler : " + model)
             else:
-                handlers.get(model)(args[1:], kicad_schematic)
+                handlers.get(model)(
+                    data=args[1:],
+                    translation=(
+                        data["result"]["dataStr"]["head"]["x"],
+                        data["result"]["dataStr"]["head"]["y"],
+                    ),
+                    kicad_schematic=kicad_schematic,
+                )
         kicad_schematic.drawing += """\n    )"""
 
     template_lib_component = f"""\
@@ -129,13 +137,25 @@ def create_schematic(
         os.makedirs(f"{output_dir}/Schematic")
 
     if os.path.exists(filename):
-        update_library(library_name, ComponentName, template_lib_component, output_dir, skip_existing)
+        update_library(
+            library_name,
+            ComponentName,
+            template_lib_component,
+            output_dir,
+            skip_existing,
+        )
     else:
         with open(filename, "w") as f:
             logging.info(f"writing in {filename} file")
             f.write(template_lib_header)
             f.write(template_lib_footer)
-        update_library(library_name, ComponentName, template_lib_component, output_dir, skip_existing)
+        update_library(
+            library_name,
+            ComponentName,
+            template_lib_component,
+            output_dir,
+            skip_existing,
+        )
 
 
 def get_type_values_properties(start_index, component_types_values):
@@ -149,7 +169,9 @@ def get_type_values_properties(start_index, component_types_values):
     )
 
 
-def update_library(library_name, component_title, template_lib_component, output_dir, skip_existing):
+def update_library(
+    library_name, component_title, template_lib_component, output_dir, skip_existing
+):
     """
     if component is already in library,
     the library will be updated,
@@ -163,7 +185,9 @@ def update_library(library_name, component_title, template_lib_component, output
 
         if f'symbol "{component_title}"' in file_content:
             if skip_existing:
-                logging.info(f"component {component_title} already in schematics library, skipping")
+                logging.info(
+                    f"component {component_title} already in schematics library, skipping"
+                )
                 return
             # use regex to find the old component template in the file and replace it with the new one
             logging.info(
