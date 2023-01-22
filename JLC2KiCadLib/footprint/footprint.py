@@ -113,7 +113,6 @@ def create_footprint(
         )
     )
 
-
     if not os.path.exists(f"{output_dir}/{footprint_lib}"):
         os.makedirs(f"{output_dir}/{footprint_lib}")
 
