@@ -109,7 +109,6 @@ def h_PAD(data, kicad_mod, footprint_info):
         rotation = float(data[9])
 
     if data[5] == "1":
-
         drill_size = 1
         pad_type = Pad.TYPE_SMT
         pad_layer = Pad.LAYERS_SMT
@@ -135,7 +134,13 @@ def h_PAD(data, kicad_mod, footprint_info):
     elif data[5] == "11" and shape == "SHAPE_CIRCLE":
         pad_type = Pad.TYPE_THT
         pad_layer = Pad.LAYERS_THT
+
     elif data[5] == "11" and shape == "SHAPE_RECT":
+        if float(data[11]) == 0:  # Check if the hole is oval
+            pass
+        else:
+            drill_size = [drill_size, mil2mm(data[11])]
+
         pad_type = Pad.TYPE_THT
         pad_layer = Pad.LAYERS_THT
 
