@@ -13,7 +13,7 @@ def create_footprint(
     footprint_lib,
     output_dir,
     model_base_variable,
-    skip_existing
+    skip_existing,
 ):
     logging.info("creating footprint ...")
 
@@ -23,7 +23,9 @@ def create_footprint(
 
     if skip_existing:
         # check if footprint already exists:
-        if os.path.isfile(os.path.join(output_dir, footprint_lib, footprint_name + ".kicad_mod")):
+        if os.path.isfile(
+            os.path.join(output_dir, footprint_lib, footprint_name + ".kicad_mod")
+        ):
             logging.info(f"Footprint {footprint_name} already exists, skipping.")
             return f"{footprint_lib}:{footprint_name}", datasheet_link
 
@@ -33,7 +35,9 @@ def create_footprint(
     kicad_mod.setTags(f"{footprint_name} footprint")
 
     class footprint_info:
-        def __init__(self, footprint_name, output_dir, footprint_lib, model_base_variable, origin):
+        def __init__(
+            self, footprint_name, output_dir, footprint_lib, model_base_variable, origin
+        ):
             self.max_X, self.max_Y, self.min_X, self.min_Y = (
                 -10000,
                 -10000,
@@ -51,7 +55,7 @@ def create_footprint(
         output_dir=output_dir,
         footprint_lib=footprint_lib,
         model_base_variable=model_base_variable,
-        origin=(x, y)
+        origin=(x, y),
     )
 
     # for each line in data : use the appropriate handler
@@ -101,12 +105,7 @@ def create_footprint(
         )
     )
 
-
-    kicad_mod.insert(
-        Translation(-mil2mm(x),
-                    -mil2mm(y)
-        )
-    )
+    kicad_mod.insert(Translation(-mil2mm(x), -mil2mm(y)))
 
     if not os.path.exists(f"{output_dir}/{footprint_lib}"):
         os.makedirs(f"{output_dir}/{footprint_lib}")
@@ -158,4 +157,4 @@ def get_footprint_info(footprint_component_uuid):
             "Could not retrieve components information from EASYEDA, default name 'NoName'."
         )
 
-    return (footprint_name, datasheet_link, footprint_shape,(x,y))
+    return (footprint_name, datasheet_link, footprint_shape, (x, y))

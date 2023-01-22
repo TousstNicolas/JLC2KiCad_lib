@@ -63,7 +63,7 @@ def main():
         metavar="JLCPCB_part_#",
         type=str,
         nargs="+",
-            help="list of JLCPCB part # from the components you want to create",
+        help="list of JLCPCB part # from the components you want to create",
     )
 
     parser.add_argument(
@@ -128,14 +128,12 @@ def main():
         help="use --log_file if you want logs to be written in a file",
     )
 
-
-    parser.add_argument( # argument for skip already existing files and schematic symbols
+    parser.add_argument(  # argument for skip already existing files and schematic symbols
         "--skip_existing",
         dest="skip_existing",
         action="store_true",
         help="use --skip_existing if you want to skip already existing files and schematic symbols",
     )
-
 
     args = parser.parse_args()
 

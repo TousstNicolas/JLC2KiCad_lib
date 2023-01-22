@@ -10,7 +10,15 @@ wrl_header = """#VRML V2.0 utf8
 """
 
 
-def get_3Dmodel(component_uuid, footprint_info, kicad_mod, translationX, translationY, translationZ, rotation):
+def get_3Dmodel(
+    component_uuid,
+    footprint_info,
+    kicad_mod,
+    translationX,
+    translationY,
+    translationZ,
+    rotation,
+):
     logging.info("creating 3D model ...")
 
     response = requests.get(
@@ -129,6 +137,7 @@ Shape{{
 
     # calculate the translation Z value
     from .footprint_handlers import mil2mm
+
     Zmm = mil2mm(translationZ)
     translation_z = Zmm - min_z
 
@@ -140,9 +149,6 @@ Shape{{
         y_list.append(float(point.split(" ")[1]))
     x_middle = (max(x_list) + min(x_list)) / 2
     y_middle = (max(y_list) + min(y_list)) / 2
-
-
-
 
     if not os.path.exists(
         f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"
@@ -163,15 +169,15 @@ Shape{{
         path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
     else:
         dirname = os.getcwd().replace("\\", "/").replace("/footprint", "")
-        path_name = f'{dirname}/{filename}'
+        path_name = f"{dirname}/{filename}"
 
         # Calculate the translation between the center of the pads and the center of the whole footprint
-    translation_x = translationX-footprint_info.origin[0]
-    translation_y = translationY-footprint_info.origin[1]
+    translation_x = translationX - footprint_info.origin[0]
+    translation_y = translationY - footprint_info.origin[1]
 
-        # Convert to inches
-    translation_x_inches = translation_x/ 100 + x_middle/10
-    translation_y_inches = -translation_y/ 100 - y_middle/10
+    # Convert to inches
+    translation_x_inches = translation_x / 100 + x_middle / 10
+    translation_y_inches = -translation_y / 100 - y_middle / 10
     translation_z_inches = translation_z / 25.4
 
     kicad_mod.append(
