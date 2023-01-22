@@ -37,7 +37,7 @@ layer_correspondance = {
 
 
 def mil2mm(data):
-    return float(data) * 0.254
+    return float(data) / 3.937
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
@@ -310,7 +310,18 @@ def h_RECT(data, kicad_mod, footprint_info):
         [Xstart, Ystart + Ydelta],
     ]
 
-    kicad_mod.append(Polygon(nodes=nodes, layer=layer_correspondance[data[4]]))
+    if data[7] != "0":
+        # not filled:
+        width = mil2mm(data[7])
+        kicad_mod.append(
+            RectLine(
+                start=(Xstart, Ystart),
+                end=(Xstart + Xdelta, Ystart + Ydelta),
+                width=width,
+                layer=layer_correspondance[data[4]]))
+    else:
+        # filled:
+        kicad_mod.append(Polygon(nodes=nodes, layer=layer_correspondance[data[4]]))
 
 
 def h_HOLE(data, kicad_mod, footprint_info):
