@@ -273,7 +273,7 @@ def h_ARC(data, kicad_mod, footprint_info):
     except Exception as e:
         logging.exception("footprint handler, h_ARC: failed to add ARC")
 
-
+# TODO: Clean up this code if not used
 """
         midpoint = [end[0] + midX, end[1] + midY]
 
