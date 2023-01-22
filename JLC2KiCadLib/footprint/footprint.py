@@ -70,6 +70,14 @@ def create_footprint(
         else:
             handlers.get(model)(args[1:], kicad_mod, footprint_info)
 
+    kicad_mod.insert(Translation(-mil2mm(x), -mil2mm(y)))
+
+    # Translate the footprint max and min values to the origin
+    footprint_info.max_X -= mil2mm(x)
+    footprint_info.max_Y -= mil2mm(y)
+    footprint_info.min_X -= mil2mm(x)
+    footprint_info.min_Y -= mil2mm(y)
+
     # set general values
     kicad_mod.append(
         Text(
@@ -105,7 +113,6 @@ def create_footprint(
         )
     )
 
-    kicad_mod.insert(Translation(-mil2mm(x), -mil2mm(y)))
 
     if not os.path.exists(f"{output_dir}/{footprint_lib}"):
         os.makedirs(f"{output_dir}/{footprint_lib}")

@@ -150,6 +150,12 @@ def h_PAD(data, kicad_mod, footprint_info):
         )
         return ()
 
+    # update footprint borders
+    footprint_info.max_X = max(footprint_info.max_X, data[1])
+    footprint_info.min_X = min(footprint_info.min_X, data[1])
+    footprint_info.max_Y = max(footprint_info.max_Y, data[2])
+    footprint_info.min_Y = min(footprint_info.min_Y, data[2])
+
     kicad_mod.append(
         Pad(
             number=pad_number,
