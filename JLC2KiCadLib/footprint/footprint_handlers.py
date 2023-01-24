@@ -341,27 +341,29 @@ def h_RECT(data, kicad_mod, footprint_info):
     Ystart = float(mil2mm(data[1]))
     Xdelta = float(mil2mm(data[2]))
     Ydelta = float(mil2mm(data[3]))
-    nodes = [
-        [Xstart, Ystart],
-        [Xstart + Xdelta, Ystart],
-        [Xstart + Xdelta, Ystart + Ydelta],
-        [Xstart, Ystart + Ydelta],
-    ]
+    start = [Xstart, Ystart]
+    end = [Xstart + Xdelta, Ystart + Ydelta]
+    width = mil2mm(data[7])
 
-    if data[7] != "0":
-        # not filled:
-        width = mil2mm(data[7])
+    if width == 0:
+        # filled:
         kicad_mod.append(
-            RectLine(
-                start=(Xstart, Ystart),
-                end=(Xstart + Xdelta, Ystart + Ydelta),
-                width=width,
+            RectFill(
+                start=start,
+                end=end,
                 layer=layer_correspondance[data[4]],
             )
         )
     else:
-        # filled:
-        kicad_mod.append(Polygon(nodes=nodes, layer=layer_correspondance[data[4]]))
+        # not filled:
+        kicad_mod.append(
+            RectLine(
+                start=start,
+                end=end,
+                width=width,
+                layer=layer_correspondance[data[4]],
+            )
+        )
 
 
 def h_HOLE(data, kicad_mod, footprint_info):
