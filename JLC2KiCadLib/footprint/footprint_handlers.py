@@ -225,19 +225,19 @@ def h_ARC(data, kicad_mod, footprint_info):
         vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
         # create vector that's normal to vec1:
 
-        length_squared = pow(midX, 2) - pow(vec1.distance_to((0,0)), 2)
+        length_squared = pow(midX, 2) - pow(vec1.distance_to((0, 0)), 2)
         if length_squared < 0:
             length_squared = 0
             reversed = "1"
 
         if reversed == "1":
             vec2 = vec1.rotate(-90)
-            magnitude = sqrt(vec2[0]**2 + vec2[1]**2)
-            vec2 = Vector2D(vec2[0]/magnitude, vec2[1]/magnitude)
+            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
         else:
             vec2 = vec1.rotate(90)
-            magnitude = sqrt(vec2[0]**2 + vec2[1]**2)
-            vec2 = Vector2D(vec2[0]/magnitude, vec2[1]/magnitude)
+            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
 
         # calculate the lenght from mid to centre using pythagoras:
         length = sqrt(length_squared)
@@ -248,8 +248,10 @@ def h_ARC(data, kicad_mod, footprint_info):
         cen_end = cen - end
 
         # calculate angle between cen_start and cen_end
-        dot_product = cen_start.x*cen_end.x + cen_start.y*cen_end.y
-        angle = acos(dot_product / (cen_start.distance_to((0,0)) * cen_end.distance_to((0,0))))
+        dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
+        angle = acos(
+            dot_product / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0)))
+        )
 
         try:
             layer = layer_correspondance[data[1]]

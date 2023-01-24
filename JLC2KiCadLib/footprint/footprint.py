@@ -17,9 +17,12 @@ def create_footprint(
 ):
     logging.info("creating footprint ...")
 
-    footprint_name, datasheet_link, footprint_shape, (x, y) = get_footprint_info(
-        footprint_component_uuid
-    )
+    (
+        footprint_name,
+        datasheet_link,
+        footprint_shape,
+        translation,
+    ) = get_footprint_info(footprint_component_uuid)
 
     if skip_existing:
         # check if footprint already exists:
@@ -55,7 +58,7 @@ def create_footprint(
         output_dir=output_dir,
         footprint_lib=footprint_lib,
         model_base_variable=model_base_variable,
-        origin=(x, y),
+        origin=translation,
     )
 
     # for each line in data : use the appropriate handler
@@ -70,13 +73,13 @@ def create_footprint(
         else:
             handlers.get(model)(args[1:], kicad_mod, footprint_info)
 
-    kicad_mod.insert(Translation(-mil2mm(x), -mil2mm(y)))
+    kicad_mod.insert(Translation(-mil2mm(translation[0]), -mil2mm(translation[1])))
 
     # Translate the footprint max and min values to the origin
-    footprint_info.max_X -= mil2mm(x)
-    footprint_info.max_Y -= mil2mm(y)
-    footprint_info.min_X -= mil2mm(x)
-    footprint_info.min_Y -= mil2mm(y)
+    footprint_info.max_X -= mil2mm(translation[0])
+    footprint_info.max_Y -= mil2mm(translation[1])
+    footprint_info.min_X -= mil2mm(translation[0])
+    footprint_info.min_Y -= mil2mm(translation[1])
 
     # set general values
     kicad_mod.append(

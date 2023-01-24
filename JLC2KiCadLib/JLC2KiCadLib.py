@@ -36,7 +36,7 @@ def add_component(component_id, args):
             skip_existing=args.skip_existing,
         )
     else:
-        _, datasheet_link, _, translation = get_footprint_info(footprint_component_uuid)
+        _, datasheet_link, _, _ = get_footprint_info(footprint_component_uuid)
         footprint_name = ""
 
     if args.schematic_creation:
