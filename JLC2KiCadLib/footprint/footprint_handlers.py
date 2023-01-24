@@ -1,7 +1,6 @@
 import json
 import logging
-from math import pow
-from .vector2 import Vector2
+from math import pow, acos
 
 import numpy as np
 
@@ -223,31 +222,34 @@ def h_ARC(data, kicad_mod, footprint_info):
         # find the midpoint of start and end
         mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
         # create vector from start to mid:
-        vec1 = Vector2(mid[0] - start[0], mid[1] - start[1])
+        vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
         # create vector that's normal to vec1:
 
-        length_squared = pow(midX, 2) - pow(vec1.length(), 2)
+        length_squared = pow(midX, 2) - pow(vec1.distance_to((0,0)), 2)
         if length_squared < 0:
             length_squared = 0
             reversed = "1"
 
         if reversed == "1":
-            vec2 = vec1.perpendicularCounterClockwise().normalized()
+            vec2 = vec1.rotate(-90)
+            magnitude = sqrt(vec2[0]**2 + vec2[1]**2)
+            vec2 = Vector2D(vec2[0]/magnitude, vec2[1]/magnitude)
         else:
-            vec2 = vec1.perpendicularClockwise().normalized()
-        # calculate the lenght from mid to centre using pythagoras:
+            vec2 = vec1.rotate(90)
+            magnitude = sqrt(vec2[0]**2 + vec2[1]**2)
+            vec2 = Vector2D(vec2[0]/magnitude, vec2[1]/magnitude)
 
+        # calculate the lenght from mid to centre using pythagoras:
         length = sqrt(length_squared)
         # calculate the centre using mid and vec2 with the correct length:
-        cen = Vector2(mid) + vec2 * length
+        cen = Vector2D(mid) + vec2 * length
 
         cen_start = cen - start
         cen_end = cen - end
 
         # calculate angle between cen_start and cen_end
-        angle = cen_start.angle(cen_end)
-
-        # mid = cen + vec2 * midX
+        dot_product = cen_start.x*cen_end.x + cen_start.y*cen_end.y
+        angle = acos(dot_product / (cen_start.distance_to((0,0)) * cen_end.distance_to((0,0))))
 
         try:
             layer = layer_correspondance[data[1]]
@@ -272,46 +274,6 @@ def h_ARC(data, kicad_mod, footprint_info):
 
     except Exception as e:
         logging.exception("footprint handler, h_ARC: failed to add ARC")
-
-
-# TODO: Clean up this code if not used
-"""
-        midpoint = [end[0] + midX, end[1] + midY]
-
-        sq1 = (
-            pow(midpoint[0], 2)
-            + pow(midpoint[1], 2)
-            - pow(start[0], 2)
-            - pow(start[1], 2)
-        )
-        sq2 = pow(end[0], 2) + pow(end[1], 2) - pow(start[0], 2) - pow(start[1], 2)
-
-        centerX = ((start[1] - end[1]) / (start[1] - midpoint[1]) * sq1 - sq2) / (
-            2 * (start[0] - end[0])
-            - 2
-            * (start[0] - midpoint[0])
-            * (start[1] - end[1])
-            / (start[1] - midpoint[1])
-        )
-        centerY = -(2 * (start[0] - midpoint[0]) * centerX + sq1) / (
-            2 * (start[1] - midpoint[1])
-        )
-        center = [centerX, centerY]
-
-        try:
-            layer = layer_correspondance[data[1]]
-        except KeyError:
-            logging.warning("footprint handler, h_ARC : layer correspondance not found")
-            layer = "F.SilkS"
-
-
-        kicad_mod.append(
-            Arc(center=center, start=start, end=end, width=width, layer=layer)
-        )
-    except Exception:
-        logging.exception("footprint handler, h_ARC: failed to add ARC")
-
-"""
 
 
 def h_CIRCLE(data, kicad_mod, footprint_info):
