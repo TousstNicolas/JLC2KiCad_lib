@@ -1,6 +1,8 @@
 import json
 import logging
-from math import pow
+from math import pow, acos
+
+import numpy as np
 
 from KicadModTree import *
 from .model3d import get_3Dmodel
@@ -17,6 +19,7 @@ __all__ = [
     "h_RECT",
     "h_HOLE",
     "h_TEXT",
+    "mil2mm",
 ]
 
 layer_correspondance = {
@@ -175,7 +178,7 @@ def h_ARC(data, kicad_mod, footprint_info):
     try:
         # parse the data
         if data[2][0] == "M":
-            startX, startY, midX, midY, _, _, _, endX, endY = [
+            startX, startY, midX, midY, _, reversed, direction, endX, endY = [
                 val
                 for val in data[2]
                 .replace("M", "")
@@ -185,7 +188,7 @@ def h_ARC(data, kicad_mod, footprint_info):
                 if val
             ]
         elif data[3][0] == "M":
-            startX, startY, midX, midY, _, _, _, endX, endY = [
+            startX, startY, midX, midY, _, reversed, direction, endX, endY = [
                 val
                 for val in data[3]
                 .replace("M", "")
@@ -208,40 +211,70 @@ def h_ARC(data, kicad_mod, footprint_info):
         endX = mil2mm(endX)
         endY = mil2mm(endY)
 
+        if midX != midY:
+            logging.warning("Unexpected arc, midX != midY")
+
         start = [startX, startY]
         end = [endX, endY]
-        midpoint = [end[0] + midX, end[1] + midY]
+        if direction == "0":
+            start, end = end, start
 
-        sq1 = (
-            pow(midpoint[0], 2)
-            + pow(midpoint[1], 2)
-            - pow(start[0], 2)
-            - pow(start[1], 2)
-        )
-        sq2 = pow(end[0], 2) + pow(end[1], 2) - pow(start[0], 2) - pow(start[1], 2)
+        # find the midpoint of start and end
+        mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+        # create vector from start to mid:
+        vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
+        # create vector that's normal to vec1:
 
-        centerX = ((start[1] - end[1]) / (start[1] - midpoint[1]) * sq1 - sq2) / (
-            2 * (start[0] - end[0])
-            - 2
-            * (start[0] - midpoint[0])
-            * (start[1] - end[1])
-            / (start[1] - midpoint[1])
+        length_squared = pow(midX, 2) - pow(vec1.distance_to((0, 0)), 2)
+        if length_squared < 0:
+            length_squared = 0
+            reversed = "1"
+
+        if reversed == "1":
+            vec2 = vec1.rotate(-90)
+            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
+        else:
+            vec2 = vec1.rotate(90)
+            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
+
+        # calculate the lenght from mid to centre using pythagoras:
+        length = sqrt(length_squared)
+        # calculate the centre using mid and vec2 with the correct length:
+        cen = Vector2D(mid) + vec2 * length
+
+        cen_start = cen - start
+        cen_end = cen - end
+
+        # calculate angle between cen_start and cen_end
+        dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
+        angle = acos(
+            dot_product / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0)))
         )
-        centerY = -(2 * (start[0] - midpoint[0]) * centerX + sq1) / (
-            2 * (start[1] - midpoint[1])
-        )
-        center = [centerX, centerY]
 
         try:
             layer = layer_correspondance[data[1]]
         except KeyError:
             logging.warning("footprint handler, h_ARC : layer correspondance not found")
             layer = "F.SilkS"
+        if reversed == "1":
+            kicad_mod.append(
+                Arc(
+                    start=start,
+                    end=end,
+                    width=width,
+                    angle=360 - angle,
+                    center=cen,
+                    layer=layer,
+                )
+            )
+        else:
+            kicad_mod.append(
+                Arc(start=start, end=end, width=width, center=cen, layer=layer)
+            )
 
-        kicad_mod.append(
-            Arc(center=center, start=start, end=end, width=width, layer=layer)
-        )
-    except Exception:
+    except Exception as e:
         logging.exception("footprint handler, h_ARC: failed to add ARC")
 
 
@@ -279,13 +312,21 @@ def h_SOLIDREGION(data, kicad_mod, footprint_info):
 
 def h_SVGNODE(data, kicad_mod, footprint_info):
     # create 3D model as a WRL file
-
+    # parse json data
+    try:
+        data = json.loads(data[0])
+    except Exception:
+        logging.exception("footprint handler, h_SVGNODE : failed to parse json data")
+        return ()
+    c_origin = data["attrs"]["c_origin"].split(",")
     get_3Dmodel(
-        component_uuid=json.loads(data[0])["attrs"]["uuid"],
+        component_uuid=data["attrs"]["uuid"],
         footprint_info=footprint_info,
         kicad_mod=kicad_mod,
-        translationZ=json.loads(data[0])["attrs"]["z"],
-        rotation=json.loads(data[0])["attrs"]["c_rotation"],
+        translationX=float(c_origin[0]),
+        translationY=float(c_origin[1]),
+        translationZ=data["attrs"]["z"],
+        rotation=data["attrs"]["c_rotation"],
     )
 
 
@@ -307,7 +348,20 @@ def h_RECT(data, kicad_mod, footprint_info):
         [Xstart, Ystart + Ydelta],
     ]
 
-    kicad_mod.append(Polygon(nodes=nodes, layer=layer_correspondance[data[4]]))
+    if data[7] != "0":
+        # not filled:
+        width = mil2mm(data[7])
+        kicad_mod.append(
+            RectLine(
+                start=(Xstart, Ystart),
+                end=(Xstart + Xdelta, Ystart + Ydelta),
+                width=width,
+                layer=layer_correspondance[data[4]],
+            )
+        )
+    else:
+        # filled:
+        kicad_mod.append(Polygon(nodes=nodes, layer=layer_correspondance[data[4]]))
 
 
 def h_HOLE(data, kicad_mod, footprint_info):
