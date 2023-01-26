@@ -1,6 +1,6 @@
 import json
 import logging
-from math import pow, acos
+from math import pow, acos, pi
 
 import numpy as np
 
@@ -250,8 +250,8 @@ def h_ARC(data, kicad_mod, footprint_info):
         # calculate angle between cen_start and cen_end
         dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
         angle = acos(
-            dot_product / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0)))
-        )
+            round(dot_product / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0)))
+        ,4)) * 180 / pi
 
         try:
             layer = layer_correspondance[data[1]]
