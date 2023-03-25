@@ -2,8 +2,6 @@ import json
 import logging
 from math import pow, acos, pi
 
-import numpy as np
-
 from KicadModTree import *
 from .model3d import get_3Dmodel
 
@@ -388,7 +386,7 @@ def h_TEXT(data, kicad_mod, footprint_info):
                 type="user",
                 at=[mil2mm(data[1]), mil2mm(data[2])],
                 text=data[8],
-                layer=layer_correspondance[data[7]],
+                layer="F.SilkS",
             )
         )
     except Exception:
