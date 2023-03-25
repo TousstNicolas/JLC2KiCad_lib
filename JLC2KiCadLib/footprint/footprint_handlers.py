@@ -1,6 +1,7 @@
 import json
 import logging
 from math import pow, acos, pi
+import re
 
 from KicadModTree import *
 from .model3d import get_3Dmodel
@@ -31,6 +32,7 @@ layer_correspondance = {
     "8": "B.Mask",
     "10": "Edge.Cuts",
     "12": "F.Fab",
+    "99": "F.SilkS",
     "100": "F.SilkS",
     "101": "F.SilkS",
 }
@@ -55,7 +57,6 @@ def h_TRACK(data, kicad_mod, footprint_info):
             return ()
 
     for i in range(int(len(points) / 2) - 1):
-
         start = [points[2 * i], points[2 * i + 1]]
         end = [points[2 * i + 2], points[2 * i + 3]]
         try:
@@ -247,9 +248,17 @@ def h_ARC(data, kicad_mod, footprint_info):
 
         # calculate angle between cen_start and cen_end
         dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
-        angle = acos(
-            round(dot_product / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0)))
-        ,4)) * 180 / pi
+        angle = (
+            acos(
+                round(
+                    dot_product
+                    / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0))),
+                    4,
+                )
+            )
+            * 180
+            / pi
+        )
 
         try:
             layer = layer_correspondance[data[1]]
@@ -305,7 +314,31 @@ def h_CIRCLE(data, kicad_mod, footprint_info):
 
 
 def h_SOLIDREGION(data, kicad_mod, footprint_info):
-    pass
+    try:
+        # edge cut in footprint
+        if data[2] == "npth":
+            if (
+                "A" in data[1]
+            ):  # A is present for when arcs are in the shape, help is needed to parse and format these
+                logging.warning(
+                    "footprint handler : h_SOLIDREGION, Edge.Cuts shape not handled, see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/41 for more informations"
+                )
+                return
+
+            # use regular expression to find all the numeric values in the string that come after "M" or "L" (other shapes are not yet handled)
+            matches = re.findall(
+                r"(?:M|L)\s+([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)", data[1]
+            )
+
+            # convert the list of numbers to a list of tuples with x, y coordinates
+            points = [(mil2mm(m[0]), mil2mm(m[1])) for m in matches]
+
+            # appends nods to footprint
+            kicad_mod.append(Polygon(nodes=points, layer="Edge.Cuts"))
+
+    except Exception:
+        logging.exception("footprint handler, h_SOLIDREGION: failed to add SOLIDREGION")
+        return
 
 
 def h_SVGNODE(data, kicad_mod, footprint_info):

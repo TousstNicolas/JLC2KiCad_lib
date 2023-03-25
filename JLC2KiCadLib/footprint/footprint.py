@@ -129,7 +129,6 @@ def create_footprint(
 
 
 def get_footprint_info(footprint_component_uuid):
-
     # fetch the component data from easyeda library
     response = requests.get(
         f"https://easyeda.com/api/components/{footprint_component_uuid}"
