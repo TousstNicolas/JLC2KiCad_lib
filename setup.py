@@ -12,7 +12,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/TousstNicolas/JLC2KiCad_lib",
-    version="1.0.18",
+    version="1.0.19",
     author="TousstNicolas",
     license="MIT",
     install_requires=["KicadModTree", "requests"],
