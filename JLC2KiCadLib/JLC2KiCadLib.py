@@ -128,7 +128,7 @@ def main():
         help="use --log_file if you want logs to be written in a file",
     )
 
-    parser.add_argument(  # argument for skip already existing files and schematic symbols
+    parser.add_argument(  # argument to skip already existing files and schematic symbols
         "--skip_existing",
         dest="skip_existing",
         action="store_true",

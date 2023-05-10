@@ -154,6 +154,7 @@ Shape{{
         f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"
     ):
         os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
+
     if not os.path.exists(
         f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
     ):
@@ -169,7 +170,10 @@ Shape{{
         path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
     else:
         dirname = os.getcwd().replace("\\", "/").replace("/footprint", "")
-        path_name = f"{dirname}/{filename}"
+        if os.path.isabs(filename):
+            path_name = filename
+        else:
+            path_name = f"{dirname}/{filename}"
 
         # Calculate the translation between the center of the pads and the center of the whole footprint
     translation_x = translationX - footprint_info.origin[0]
