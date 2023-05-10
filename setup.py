@@ -3,6 +3,7 @@ import os
 
 from setuptools import setup, find_packages
 
+from JLC2KiCadLib.__version__ import __version__
 
 long_description = open(os.path.join(sys.path[0], "README.md")).read()
 
@@ -12,7 +13,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/TousstNicolas/JLC2KiCad_lib",
-    version="1.0.20",
+    version=__version__,
     author="TousstNicolas",
     license="MIT",
     install_requires=["KicadModTree", "requests"],

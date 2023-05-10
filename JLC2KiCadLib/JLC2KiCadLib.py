@@ -3,13 +3,13 @@ import json
 import logging
 import argparse
 
+from .__version__ import __version__
 from . import helper
 from .footprint.footprint import create_footprint, get_footprint_info
 from .schematic.schematic import create_schematic
 
 
 def add_component(component_id, args):
-
     logging.info(f"creating library for component {component_id}")
     data = json.loads(
         requests.get(
@@ -133,6 +133,13 @@ def main():
         dest="skip_existing",
         action="store_true",
         help="use --skip_existing if you want to skip already existing files and schematic symbols",
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Print versin number and exit",
     )
 
     args = parser.parse_args()
