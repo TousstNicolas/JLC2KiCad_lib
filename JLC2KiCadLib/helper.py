@@ -3,7 +3,6 @@ import sys
 
 
 def set_logging(logging_level, logging_file):
-
     LOGGING_FILE = "JLC2KiCad_lib.log"
 
     if logging_file:

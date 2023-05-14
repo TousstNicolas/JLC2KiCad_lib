@@ -5,7 +5,7 @@ import os
 import logging
 
 from KicadModTree import *
-from .schematic_handlers import *
+from .symbol_handlers import *
 
 
 template_lib_header = f"""\
@@ -22,8 +22,8 @@ supported_value_types = [
 ]  # define which attribute/value from JLCPCB/LCSC will be added in the "value" field
 
 
-def create_schematic(
-    schematic_component_uuid,
+def create_symbol(
+    symbol_component_uuid,
     footprint_name,
     datasheet_link,
     library_name,
@@ -31,26 +31,25 @@ def create_schematic(
     component_id,
     skip_existing,
 ):
-    class kicad_schematic:
+    class kicad_symbol:
         drawing = ""
         pinNamesHide = ""
         pinNumbersHide = ""
 
-    kicad_schematic = kicad_schematic()
+    kicad_symbol = kicad_symbol()
 
     ComponentName = ""
-    for component_uuid in schematic_component_uuid:
-
+    for component_uuid in symbol_component_uuid:
         response = requests.get(f"https://easyeda.com/api/components/{component_uuid}")
         if response.status_code == requests.codes.ok:
             data = json.loads(response.content.decode())
         else:
             logging.error(
-                f"create_schematic error. Requests returned with error code {response.status_code}"
+                f"create_symbol error. Requests returned with error code {response.status_code}"
             )
             return ()
 
-        schematic_shape = data["result"]["dataStr"]["shape"]
+        symbol_shape = data["result"]["dataStr"]["shape"]
         symmbolic_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"][
             "pre"
         ].replace("?", "")
@@ -75,8 +74,8 @@ def create_schematic(
             ComponentName = component_title
             component_title += "_0"
         if (
-            len(schematic_component_uuid) >= 2
-            and component_uuid == schematic_component_uuid[0]
+            len(symbol_component_uuid) >= 2
+            and component_uuid == symbol_component_uuid[0]
         ):
             continue
 
@@ -84,20 +83,20 @@ def create_schematic(
         if not library_name:
             library_name = ComponentName
 
-        filename = f"{output_dir}/Schematic/" + library_name + ".kicad_sym"
+        filename = f"{output_dir}/symbol/" + library_name + ".kicad_sym"
 
-        logging.info(f"creating schematic {component_title} in {library_name}")
+        logging.info(f"creating symbol {component_title} in {library_name}")
 
-        kicad_schematic.drawing += f'''\n    (symbol "{component_title}_1"'''
+        kicad_symbol.drawing += f'''\n    (symbol "{component_title}_1"'''
 
-        for line in schematic_shape:
+        for line in symbol_shape:
             args = [
                 i for i in line.split("~") if i
             ]  # split and remove empty string in list
             model = args[0]
             logging.debug(args)
             if model not in handlers:
-                logging.warning("Schematic : parsing model not in handler : " + model)
+                logging.warning("symbol : parsing model not in handler : " + model)
             else:
                 handlers.get(model)(
                     data=args[1:],
@@ -105,12 +104,12 @@ def create_schematic(
                         data["result"]["dataStr"]["head"]["x"],
                         data["result"]["dataStr"]["head"]["y"],
                     ),
-                    kicad_schematic=kicad_schematic,
+                    kicad_symbol=kicad_symbol,
                 )
-        kicad_schematic.drawing += """\n    )"""
+        kicad_symbol.drawing += """\n    )"""
 
     template_lib_component = f"""\
-  (symbol "{ComponentName}" {kicad_schematic.pinNamesHide} {kicad_schematic.pinNumbersHide} (in_bom yes) (on_board yes)
+  (symbol "{ComponentName}" {kicad_symbol.pinNamesHide} {kicad_symbol.pinNumbersHide} (in_bom yes) (on_board yes)
     (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -129,12 +128,12 @@ def create_schematic(
     (property "LCSC" "{component_id}" (id 5) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    {get_type_values_properties(6, component_types_values)}{kicad_schematic.drawing}
+    {get_type_values_properties(6, component_types_values)}{kicad_symbol.drawing}
   )
 """
 
-    if not os.path.exists(f"{output_dir}/Schematic"):
-        os.makedirs(f"{output_dir}/Schematic")
+    if not os.path.exists(f"{output_dir}/symbol"):
+        os.makedirs(f"{output_dir}/symbol")
 
     if os.path.exists(filename):
         update_library(
@@ -179,14 +178,14 @@ def update_library(
     the component will be added at the end
     """
 
-    with open(f"{output_dir}/Schematic/{library_name}.kicad_sym", "rb+") as lib_file:
+    with open(f"{output_dir}/symbol/{library_name}.kicad_sym", "rb+") as lib_file:
         pattern = f'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 
         if f'symbol "{component_title}"' in file_content:
             if skip_existing:
                 logging.info(
-                    f"component {component_title} already in schematics library, skipping"
+                    f"component {component_title} already in symbols library, skipping"
                 )
                 return
             # use regex to find the old component template in the file and replace it with the new one

@@ -12,7 +12,7 @@ def mil2mm(data):
     return float(data) / 3.937
 
 
-def h_R(data, translation, kicad_schematic):
+def h_R(data, translation, kicad_symbol):
     """
     Rectangle handler
     """
@@ -34,7 +34,7 @@ def h_R(data, translation, kicad_schematic):
         X2 = mil2mm(X2 - translation[0])
         Y2 = -mil2mm(Y2 - translation[1])
 
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (rectangle
         (start {X1} {Y1})
         (end {X2} {Y2})
@@ -43,21 +43,20 @@ def h_R(data, translation, kicad_schematic):
       )"""
     except Exception as e:
         print(e)
-        logging.error("Schematic : failed to add a rectangle")
+        logging.error("symbol : failed to add a rectangle")
 
 
-def h_E(data, translation, kicad_schematic):
+def h_E(data, translation, kicad_symbol):
     """
     Circle
     """
 
     try:
-
         X1 = mil2mm(float(data[0]) - translation[0])
         Y1 = -mil2mm(float(data[1]) - translation[1])
         radius = mil2mm(float(data[2]))
 
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (circle
         (center {X1} {Y1})
         (radius {radius})
@@ -66,12 +65,12 @@ def h_E(data, translation, kicad_schematic):
       )"""
     except Exception as e:
         print(e)
-        logging.error("schematic : failed to add circle")
+        logging.error("symbol : failed to add circle")
 
 
-def h_P(data, translation, kicad_schematic):
+def h_P(data, translation, kicad_symbol):
     """
-    Add Pin to the schematic
+    Add Pin to the symbol
     """
 
     if len(data) == 24:  # sometimes, the rotation parameter is not in the list.
@@ -103,7 +102,7 @@ def h_P(data, translation, kicad_schematic):
     else:
         rotation = 0
         logging.warning(
-            f'Schematic : pin number {pinNumber} : "{pinName}" failed to find orientation. Using Default orientation'
+            f'symbol : pin number {pinNumber} : "{pinName}" failed to find orientation. Using Default orientation'
         )
 
     if rotation == 0 or rotation == 180:
@@ -112,10 +111,10 @@ def h_P(data, translation, kicad_schematic):
         length = mil2mm(abs(float(data[8].split("v")[-1])))
 
     try:
-        if not kicad_schematic.pinNamesHide and data[9].split("^^")[1] == "0":
-            kicad_schematic.pinNamesHide = "(pin_names hide)"
-        if not kicad_schematic.pinNumbersHide and data[17].split("^^")[1] == "0":
-            kicad_schematic.pinNumbersHide = "(pin_numbers hide)"
+        if not kicad_symbol.pinNamesHide and data[9].split("^^")[1] == "0":
+            kicad_symbol.pinNamesHide = "(pin_names hide)"
+        if not kicad_symbol.pinNumbersHide and data[17].split("^^")[1] == "0":
+            kicad_symbol.pinNumbersHide = "(pin_numbers hide)"
 
         nameSize = mil2mm(float(data[16].replace("pt", "")))
         numberSize = mil2mm(float(data[24].replace("pt", "")))
@@ -123,7 +122,7 @@ def h_P(data, translation, kicad_schematic):
         nameSize = 1
         numberSize = 1
 
-    kicad_schematic.drawing += f"""
+    kicad_symbol.drawing += f"""
       (pin {electrical_type} line
         (at {X} {Y} {rotation})
         (length {length})
@@ -132,7 +131,7 @@ def h_P(data, translation, kicad_schematic):
       )"""
 
 
-def h_T(data, translation, kicad_schematic):
+def h_T(data, translation, kicad_symbol):
     """
     Annotation handler
     """
@@ -145,17 +144,17 @@ def h_T(data, translation, kicad_schematic):
         fontSize = mil2mm(float(data[6].replace("pt", "")))
 
         text = data[10]
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (text
         "{text}"
         (at {X} {Y} {angle})
         (effects (font (size {fontSize} {fontSize})))
       )"""
     except Exception:
-        logging.error("failed to add text to schematic")
+        logging.error("failed to add text to symbol")
 
 
-def h_PL(data, translation, kicad_schematic):
+def h_PL(data, translation, kicad_symbol):
     """
     Polygone handler
     """
@@ -169,7 +168,7 @@ def h_PL(data, translation, kicad_schematic):
             )
         polystr = "\n          ".join(polypts)
 
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (polyline
         (pts
           {polystr}
@@ -178,10 +177,10 @@ def h_PL(data, translation, kicad_schematic):
         (fill (type none))
       )"""
     except Exception:
-        logging.error("Schematic : failed to add a polygone")
+        logging.error("symbol : failed to add a polygone")
 
 
-def h_PG(data, translation, kicad_schematic):
+def h_PG(data, translation, kicad_symbol):
     """
     Closed polygone handler
     """
@@ -196,7 +195,7 @@ def h_PG(data, translation, kicad_schematic):
         polypts.append(polypts[0])
         polystr = "\n          ".join(polypts)
 
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (polyline
         (pts
           {polystr}
@@ -205,22 +204,22 @@ def h_PG(data, translation, kicad_schematic):
         (fill (type background))
       )"""
     except Exception:
-        logging.error("Schematic : failed to add a polygone")
+        logging.error("symbol : failed to add a polygone")
 
 
-def h_PT(data, translation, kicad_schematic):
+def h_PT(data, translation, kicad_symbol):
     """
     Triangle handler
     """
 
     try:
         data[0] = data[0].replace("M ", "").replace("L ", "").replace(" Z", "")
-        h_PG(data, translation, kicad_schematic)
+        h_PG(data, translation, kicad_symbol)
     except Exception:
-        logging.error("Schematic : failed to add a triangle")
+        logging.error("symbol : failed to add a triangle")
 
 
-def h_A(data, translation, kicad_schematic):
+def h_A(data, translation, kicad_symbol):
     """
     Arc handler
     """
@@ -311,7 +310,7 @@ def h_A(data, translation, kicad_schematic):
         Xmid = mil2mm(Xmid - translation[0])
         Ymid = -mil2mm(Ymid - translation[1])
 
-        kicad_schematic.drawing += f"""
+        kicad_symbol.drawing += f"""
       (arc
         (start {Xstart} {Ystart})
         (mid {Xmid} {Ymid})
@@ -320,7 +319,7 @@ def h_A(data, translation, kicad_schematic):
         (fill (type none))
       )"""
     except Exception:
-        logging.error("Schematic : failed to add an arc")
+        logging.error("symbol : failed to add an arc")
 
 
 handlers = {

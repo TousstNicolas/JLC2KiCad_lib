@@ -118,7 +118,7 @@ def h_PAD(data, kicad_mod, footprint_info):
             for i, coord in enumerate(data[8].split(" ")):
                 points.append(mil2mm(coord) - at[i % 2])
             primitives = [Polygon(nodes=zip(points[::2], points[1::2]))]
-            size=[0.1,0.1]
+            size = [0.1, 0.1]
             rotation = 0
 
     elif data[5] == "11" and shape == "SHAPE_OVAL":

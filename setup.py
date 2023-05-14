@@ -9,7 +9,7 @@ long_description = open(os.path.join(sys.path[0], "README.md")).read()
 
 setup(
     name="JLC2KiCadLib",
-    description="JLC2KiCad_lib is a python script that generate a component library (schematic, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.",
+    description="JLC2KiCad_lib is a python script that generate a component library (symbol, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/TousstNicolas/JLC2KiCad_lib",

@@ -4,14 +4,13 @@
 
 [![PyPI version](https://badge.fury.io/py/JLC2KiCadLib.svg)](https://badge.fury.io/py/JLC2KiCadLib)
 ![Python versions](https://img.shields.io/pypi/pyversions/JLC2KiCadLib.svg)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/TousstNicolas/JLC2KiCad_lib.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/TousstNicolas/JLC2KiCad_lib/context:python)
 [![Downloads](https://pepy.tech/badge/jlc2kicadlib)](https://pepy.tech/project/jlc2kicadlib)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </p>
 
-JLC2KiCadLib is a python script that generate a component library (schematic, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.
+JLC2KiCadLib is a python script that generate a component library (symbol, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.
 This script requires **Python 3.6** or higher.
 
 ## Exemple 
@@ -20,7 +19,7 @@ This script requires **Python 3.6** or higher.
 
 easyEDA origin | KiCad result
 ---- | ----
-![JLCSchematic](images/JLC_Schematic_1.png) | ![KiCadSchematic](images/KiCad_Schematic_1.png)
+![JLCSymbol](images/JLC_Symbol_1.png) | ![KiCadSymbol](images/KiCad_Symbol_1.png)
 ![JLCFootprint](images/JLC_Footprint_1.png) | ![KiCadFootprint](images/KiCad_Footprint_1.png)
 ![JLC3Dmodel](images/JLC_3Dmodel.png) | ![KiCad3Dmodel](images/KiCad_3Dmodel.png)
 
@@ -43,41 +42,65 @@ pip install .
 ## Usage 
 
 ```
+usage: JLC2KiCadLib [-h] [-dir OUTPUT_DIR] [-model_base_variable MODEL_BASE_VARIABLE] [--no_footprint] [--no_symbol] [-symbol_lib SYMBOL_LIB] [-footprint_lib FOOTPRINT_LIB]
+                    [-logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--log_file] [--skip_existing] [--version]
+                    JLCPCB_part_# [JLCPCB_part_# ...]
+
+take a JLCPCB part # and create the according component's kicad's library
+
 positional arguments:
   JLCPCB_part_#         list of JLCPCB part # from the components you want to create
 
 options:
   -h, --help            show this help message and exit
   -dir OUTPUT_DIR       base directory for output library files
-  -model_base_variable MODEL_BASE_VARIABLE
-                        use -model_base_variable if you want to specifie the base path of the 3D model using a path variable
   --no_footprint        use --no_footprint if you do not want to create the footprint
-  --no_schematic        use --no_schematic if you do not want to create the schematic
-  -schematic_lib SCHEMATIC_LIB
-                        set schematic library name, default is "default_lib"
+  --no_symbol           use --no_symbol if you do not want to create the symbol
+  -symbol_lib SYMBOL_LIB
+                        set symbol library name, default is "default_lib"
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
+  --skip_existing       use --skip_existing if you want to skip already existing files and symbols
+  -model_base_variable MODEL_BASE_VARIABLE
+                        use -model_base_variable if you want to specifie the base path of the 3D model using a path variable
   -logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
   --log_file            use --log_file if you want logs to be written in a file
-  --skip_existing       use --skip_existing if you want to skip the creation of a symbol/footprint if they already exist
+  --version             Print version number and exit
+
+exemple use : 
+        python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint
 ```
 
-Example usage : `JLC2KiCadLib C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib`
+The only required arguments are the JLCPCP_part number (e.g. Cxxxxx)
 
-This example will create the schematic, footprint and 3D model for the two components specified, and will output the schematic in the `./My_lib/Schematic/My_Schematic_lib.lib` file, the footprint and 3D model will be created in the `./My_lib/Footprint`.
+Example usage : `JLC2KiCadLib C1337258 C24112 -dir My_lib -symbol_lib My_symbol_lib`
+
+This example will create the symbol, footprint and 3D model for the two components specified and will output the symbol in the `./My_lib/symbol/My_symbol_lib.lib` file, the footprint and 3D model will be created in the `./My_lib/Footprint`. This will result in the following tree to be created : 
+
+```
+My_lib
+├── footprint
+│   ├── packages3d
+│   │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.wrl
+│   │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.wrl
+│   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.kicad_mod
+│   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.kicad_mod
+└── symbol
+    └── My_symbol_lib.kicad_sym
+```
 
 The JLCPCB part # is found in the part info section of every component in the JLCPCB part library. 
 
-By default, the library folder will be created in the execution folder. You can specify an absolute path with the -dir option. 
+By default, the library folder will be created in the execution directory. You can specify an absolute path with the -dir option. 
 
 ## Dependencies 
 
-This script use the [KicadModTree](https://gitlab.com/kicad/libraries/kicad-footprint-generator) framework to write the footprints. 
+JLC2KiCadLib relies on the [KicadModTree](https://gitlab.com/kicad/libraries/kicad-footprint-generator) framework to generate the footprints. 
 
 ## Notes
 
-* Even so I tested the script on a lot of components, be careful and always check the output footprint and schematic.
+* Even so I tested the script on a lot of components, be careful and always check the output footprint and symbol.
 * I consider this project completed. I will continue to maintain it if a bug report is filed, but I will not develop new functionality in the near future. If you feel that an important feature is missing, please open an issue to discuss it, then you can fork this project with a new branch before submitting a PR. 
 
 ## License 

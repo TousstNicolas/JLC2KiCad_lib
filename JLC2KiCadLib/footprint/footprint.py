@@ -124,7 +124,7 @@ def create_footprint(
     file_handler.writeFile(f"{output_dir}/{footprint_lib}/{footprint_name}.kicad_mod")
     logging.info(f"created '{output_dir}/{footprint_lib}/{footprint_name}.kicad_mod'")
 
-    # return and datasheet link footprint name to be linked with the schematic
+    # return and datasheet link footprint name to be linked with the symbol
     return (f"{footprint_lib}:{footprint_name}", datasheet_link)
 
 

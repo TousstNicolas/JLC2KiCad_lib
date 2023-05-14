@@ -6,7 +6,7 @@ import argparse
 from .__version__ import __version__
 from . import helper
 from .footprint.footprint import create_footprint, get_footprint_info
-from .schematic.schematic import create_schematic
+from .symbol.symbol import create_symbol
 
 
 def add_component(component_id, args):
@@ -24,7 +24,7 @@ def add_component(component_id, args):
         return ()
 
     footprint_component_uuid = data["result"][-1]["component_uuid"]
-    schematic_component_uuid = [i["component_uuid"] for i in data["result"][:-1]]
+    symbol_component_uuid = [i["component_uuid"] for i in data["result"][:-1]]
 
     if args.footprint_creation:
         footprint_name, datasheet_link = create_footprint(
@@ -39,12 +39,12 @@ def add_component(component_id, args):
         _, datasheet_link, _, _ = get_footprint_info(footprint_component_uuid)
         footprint_name = ""
 
-    if args.schematic_creation:
-        create_schematic(
-            schematic_component_uuid=schematic_component_uuid,
+    if args.symbol_creation:
+        create_symbol(
+            symbol_component_uuid=symbol_component_uuid,
             footprint_name=footprint_name,
             datasheet_link=datasheet_link,
-            library_name=args.schematic_lib,
+            library_name=args.symbol_lib,
             output_dir=args.output_dir,
             component_id=component_id,
             skip_existing=args.skip_existing,
@@ -54,7 +54,7 @@ def add_component(component_id, args):
 def main():
     parser = argparse.ArgumentParser(
         description="take a JLCPCB part # and create the according component's kicad's library",
-        epilog="exemple use : \n	python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -schematic_lib My_Schematic_lib --no_footprint",
+        epilog="exemple use : \n	python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -75,14 +75,6 @@ def main():
     )
 
     parser.add_argument(
-        "-model_base_variable",
-        dest="model_base_variable",
-        type=str,
-        default="",
-        help="use -model_base_variable if you want to specifie the base path of the 3D model using a path variable",
-    )
-
-    parser.add_argument(
         "--no_footprint",
         dest="footprint_creation",
         action="store_false",
@@ -90,18 +82,18 @@ def main():
     )
 
     parser.add_argument(
-        "--no_schematic",
-        dest="schematic_creation",
+        "--no_symbol",
+        dest="symbol_creation",
         action="store_false",
-        help="use --no_schematic if you do not want to create the schematic",
+        help="use --no_symbol if you do not want to create the symbol",
     )
 
     parser.add_argument(
-        "-schematic_lib",
-        dest="schematic_lib",
+        "-symbol_lib",
+        dest="symbol_lib",
         type=str,
         default=None,
-        help='set schematic library name, default is "default_lib"',
+        help='set symbol library name, default is "default_lib"',
     )
 
     parser.add_argument(
@@ -110,6 +102,21 @@ def main():
         type=str,
         default="footprint",
         help='set footprint library name,  default is "footprint"',
+    )
+
+    parser.add_argument(  # argument to skip already existing files and symbols
+        "--skip_existing",
+        dest="skip_existing",
+        action="store_true",
+        help="use --skip_existing if you want do not want to replace already existing footprints and symbols",
+    )
+
+    parser.add_argument(
+        "-model_base_variable",
+        dest="model_base_variable",
+        type=str,
+        default="",
+        help="use -model_base_variable if you want to specifie the base path of the 3D model using a path variable",
     )
 
     parser.add_argument(
@@ -126,13 +133,6 @@ def main():
         dest="log_file",
         action="store_true",
         help="use --log_file if you want logs to be written in a file",
-    )
-
-    parser.add_argument(  # argument to skip already existing files and schematic symbols
-        "--skip_existing",
-        dest="skip_existing",
-        action="store_true",
-        help="use --skip_existing if you want to skip already existing files and schematic symbols",
     )
 
     parser.add_argument(
