@@ -12,7 +12,7 @@ template_lib_header = f"""\
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
-template_lib_footer = ")"
+template_lib_footer = ")\n"
 
 supported_value_types = [
     "Resistance",
@@ -205,6 +205,8 @@ def update_library(
             lib_file.write(sub.encode())
         else:
             # move before the library footer and write the component template
-            lib_file.seek(-len(template_lib_footer), 2)
-            lib_file.write(template_lib_component.encode())
-            lib_file.write(template_lib_footer.encode())
+            # see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/46
+            new_content = file_content[: file_content.rfind(")")]
+            new_content = new_content + template_lib_component + template_lib_footer
+            lib_file.seek(0)
+            lib_file.write(new_content.encode())
