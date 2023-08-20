@@ -42,7 +42,9 @@ def add_component(component_id, args):
     if args.symbol_creation:
         create_symbol(
             symbol_component_uuid=symbol_component_uuid,
-            footprint_name=footprint_name,
+            footprint_name=footprint_name.replace(
+                ".pretty", ""
+            ),  # see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/47
             datasheet_link=datasheet_link,
             library_name=args.symbol_lib,
             output_dir=args.output_dir,
