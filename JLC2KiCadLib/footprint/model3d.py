@@ -9,6 +9,29 @@ wrl_header = """#VRML V2.0 utf8
 #for more info see https://github.com/TousstNicolas/JLC2KICAD_lib
 """
 
+def get_StepModel(
+    component_uuid,
+    footprint_info
+):
+    logging.info(f"Downloading STEP Model ...")
+
+    # `qAxj6KHrDKw4blvCG8QJPs7Y` is a constant in
+    # https://modules.lceda.cn/smt-gl-engine/0.8.22.6032922c/smt-gl-engine.js
+    # and points to the bucket containing the step files.
+
+    response = requests.get(
+        f"https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{component_uuid}"
+    )
+    if response.status_code == requests.codes.ok:
+        ensure_footprint_lib_directories(footprint_info)
+        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.step"
+        with open(filename, "wb") as f:
+            f.write(response.content)
+    else:
+        logging.error("request error, no Step model found")
+        return ()
+
+
 
 def get_3Dmodel(
     component_uuid,
@@ -150,17 +173,7 @@ Shape{{
     x_middle = (max(x_list) + min(x_list)) / 2
     y_middle = (max(y_list) + min(y_list)) / 2
 
-    if not os.path.exists(
-        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"
-    ):
-        os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
-
-    if not os.path.exists(
-        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
-    ):
-        os.makedirs(
-            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
-        )
+    ensure_footprint_lib_directories(footprint_info)
 
     filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.wrl"
     with open(filename, "w") as f:
@@ -192,3 +205,16 @@ Shape{{
         )
     )
     logging.info(f"added {path_name} to footprint")
+
+def ensure_footprint_lib_directories(footprint_info):
+    if not os.path.exists(
+        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"
+    ):
+        os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
+
+    if not os.path.exists(
+        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
+    ):
+        os.makedirs(
+            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
+        )

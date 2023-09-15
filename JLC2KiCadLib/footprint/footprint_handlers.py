@@ -4,7 +4,7 @@ from math import pow, acos, pi
 import re
 
 from KicadModTree import *
-from .model3d import get_3Dmodel
+from .model3d import get_3Dmodel, get_StepModel
 
 __all__ = [
     "handlers",
@@ -351,6 +351,12 @@ def h_SVGNODE(data, kicad_mod, footprint_info):
     except Exception:
         logging.exception("footprint handler, h_SVGNODE : failed to parse json data")
         return ()
+    
+    get_StepModel(
+        component_uuid=data["attrs"]["uuid"],
+        footprint_info=footprint_info,
+    )
+
     c_origin = data["attrs"]["c_origin"].split(",")
     get_3Dmodel(
         component_uuid=data["attrs"]["uuid"],
