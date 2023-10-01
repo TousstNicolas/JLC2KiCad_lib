@@ -9,10 +9,8 @@ wrl_header = """#VRML V2.0 utf8
 #for more info see https://github.com/TousstNicolas/JLC2KICAD_lib
 """
 
-def get_StepModel(
-    component_uuid,
-    footprint_info
-):
+
+def get_StepModel(component_uuid, footprint_info, kicad_mod):
     logging.info(f"Downloading STEP Model ...")
 
     # `qAxj6KHrDKw4blvCG8QJPs7Y` is a constant in
@@ -27,13 +25,20 @@ def get_StepModel(
         filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.step"
         with open(filename, "wb") as f:
             f.write(response.content)
+        logging.info(f"STEP model created at {filename}")
+        kicad_mod.append(
+            Model(
+                filename=filename,
+            )
+        )
+        logging.info(f"added {filename} to footprint")
+
     else:
         logging.error("request error, no Step model found")
         return ()
 
 
-
-def get_3Dmodel(
+def get_WrlModel(
     component_uuid,
     footprint_info,
     kicad_mod,
@@ -42,7 +47,7 @@ def get_3Dmodel(
     translationZ,
     rotation,
 ):
-    logging.info("creating 3D model ...")
+    logging.info("Creating WRL model ...")
 
     response = requests.get(
         f"https://easyeda.com/analyzer/api/3dmodel/{component_uuid}"
@@ -197,14 +202,22 @@ Shape{{
     translation_y_inches = -translation_y / 100 - y_middle / 10
     translation_z_inches = translation_z / 25.4
 
-    kicad_mod.append(
-        Model(
-            filename=path_name,
-            at=[translation_x_inches, translation_y_inches, translation_z_inches],
-            rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
+    # Check if a model has already been added to the footprint to prevent duplicates
+    if any(isinstance(child, Model) for child in kicad_mod.getAllChilds()):
+        logging.info(f"WRL model created at {path_name}")
+        logging.info(
+            f"WRL model was not added to the footprint to prevent duplicates with STEP model"
         )
-    )
-    logging.info(f"added {path_name} to footprint")
+    else:
+        kicad_mod.append(
+            Model(
+                filename=path_name,
+                at=[translation_x_inches, translation_y_inches, translation_z_inches],
+                rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
+            )
+        )
+        logging.info(f"added {path_name} to footprint")
+
 
 def ensure_footprint_lib_directories(footprint_info):
     if not os.path.exists(

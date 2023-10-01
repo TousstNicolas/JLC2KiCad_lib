@@ -42,8 +42,9 @@ pip install .
 ## Usage 
 
 ```
-usage: JLC2KiCadLib [-h] [-dir OUTPUT_DIR] [-model_base_variable MODEL_BASE_VARIABLE] [--no_footprint] [--no_symbol] [-symbol_lib SYMBOL_LIB] [-footprint_lib FOOTPRINT_LIB]
-                    [-logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--log_file] [--skip_existing] [--version]
+usage: JLC2KiCadLib [-h] [-dir OUTPUT_DIR] [--no_footprint] [--no_symbol] [-symbol_lib SYMBOL_LIB] [-footprint_lib FOOTPRINT_LIB]
+                    [-models [{STEP,WRL} ...]] [--skip_existing] [-model_base_variable MODEL_BASE_VARIABLE]
+                    [-logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--log_file] [--version]
                     JLCPCB_part_# [JLCPCB_part_# ...]
 
 take a JLCPCB part # and create the according component's kicad's library
@@ -60,13 +61,17 @@ options:
                         set symbol library name, default is "default_lib"
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
-  --skip_existing       use --skip_existing if you want to skip already existing files and symbols
+  -models [{STEP,WRL} ...]
+                        Select the model you want to create. Default is STEP. If both are selected, only the STEP model will be added to the footprint
+                        (the WRL model will still be generated alongside the STEP model). 
+                        If you do not want any model to be generated, use the --models without arguments
+  --skip_existing       use --skip_existing if you want do not want to replace already existing footprints and symbols
   -model_base_variable MODEL_BASE_VARIABLE
                         use -model_base_variable if you want to specifie the base path of the 3D model using a path variable
   -logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
   --log_file            use --log_file if you want logs to be written in a file
-  --version             Print version number and exit
+  --version             Print versin number and exit
 
 exemple use : 
         python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint
@@ -82,8 +87,8 @@ This example will create the symbol, footprint and 3D model for the two componen
 My_lib
 ├── footprint
 │   ├── packages3d
-│   │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.wrl
-│   │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.wrl
+│   │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.step
+│   │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.step
 │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.kicad_mod
 │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.kicad_mod
 └── symbol

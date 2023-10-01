@@ -14,6 +14,7 @@ def create_footprint(
     output_dir,
     model_base_variable,
     skip_existing,
+    models,
 ):
     logging.info("creating footprint ...")
 
@@ -39,7 +40,13 @@ def create_footprint(
 
     class footprint_info:
         def __init__(
-            self, footprint_name, output_dir, footprint_lib, model_base_variable, origin
+            self,
+            footprint_name,
+            output_dir,
+            footprint_lib,
+            model_base_variable,
+            origin,
+            models,
         ):
             self.max_X, self.max_Y, self.min_X, self.min_Y = (
                 -10000,
@@ -52,6 +59,7 @@ def create_footprint(
             self.footprint_lib = footprint_lib
             self.model_base_variable = model_base_variable
             self.origin = origin
+            self.models = models
 
     footprint_info = footprint_info(
         footprint_name=footprint_name,
@@ -59,6 +67,7 @@ def create_footprint(
         footprint_lib=footprint_lib,
         model_base_variable=model_base_variable,
         origin=translation,
+        models=models,
     )
 
     # for each line in data : use the appropriate handler

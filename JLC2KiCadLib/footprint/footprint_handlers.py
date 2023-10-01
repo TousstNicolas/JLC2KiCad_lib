@@ -4,7 +4,7 @@ from math import pow, acos, pi
 import re
 
 from KicadModTree import *
-from .model3d import get_3Dmodel, get_StepModel
+from .model3d import get_WrlModel, get_StepModel
 
 __all__ = [
     "handlers",
@@ -351,22 +351,25 @@ def h_SVGNODE(data, kicad_mod, footprint_info):
     except Exception:
         logging.exception("footprint handler, h_SVGNODE : failed to parse json data")
         return ()
-    
-    get_StepModel(
-        component_uuid=data["attrs"]["uuid"],
-        footprint_info=footprint_info,
-    )
 
-    c_origin = data["attrs"]["c_origin"].split(",")
-    get_3Dmodel(
-        component_uuid=data["attrs"]["uuid"],
-        footprint_info=footprint_info,
-        kicad_mod=kicad_mod,
-        translationX=float(c_origin[0]),
-        translationY=float(c_origin[1]),
-        translationZ=data["attrs"]["z"],
-        rotation=data["attrs"]["c_rotation"],
-    )
+    if "STEP" in footprint_info.models:
+        get_StepModel(
+            component_uuid=data["attrs"]["uuid"],
+            footprint_info=footprint_info,
+            kicad_mod=kicad_mod,
+        )
+
+    if "WRL" in footprint_info.models:
+        c_origin = data["attrs"]["c_origin"].split(",")
+        get_WrlModel(
+            component_uuid=data["attrs"]["uuid"],
+            footprint_info=footprint_info,
+            kicad_mod=kicad_mod,
+            translationX=float(c_origin[0]),
+            translationY=float(c_origin[1]),
+            translationZ=data["attrs"]["z"],
+            rotation=data["attrs"]["c_rotation"],
+        )
 
 
 def h_VIA(data, kicad_mod, footprint_info):
