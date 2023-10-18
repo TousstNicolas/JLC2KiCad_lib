@@ -25,13 +25,24 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
         filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.step"
         with open(filename, "wb") as f:
             f.write(response.content)
+
         logging.info(f"STEP model created at {filename}")
-        kicad_mod.append(
-            Model(
-                filename=filename,
+
+        if footprint_info.model_base_variable:
+            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
+            kicad_mod.append(
+                Model(
+                    filename=path_name,
+                )
             )
-        )
-        logging.info(f"added {filename} to footprint")
+            logging.info(f"added {path_name} to footprint")
+        else:
+            kicad_mod.append(
+                Model(
+                    filename=filename,
+                )
+            )
+            logging.info(f"added {filename} to footprint")
 
     else:
         logging.error("request error, no Step model found")
@@ -216,7 +227,7 @@ Shape{{
                 rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
             )
         )
-        logging.info(f"added {path_name} to footprint")
+        logging.info(f"added {path_name} to footprintc")
 
 
 def ensure_footprint_lib_directories(footprint_info):
