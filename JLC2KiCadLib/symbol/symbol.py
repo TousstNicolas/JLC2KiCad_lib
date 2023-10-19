@@ -27,6 +27,7 @@ def create_symbol(
     footprint_name,
     datasheet_link,
     library_name,
+    symbol_path,
     output_dir,
     component_id,
     skip_existing,
@@ -83,7 +84,9 @@ def create_symbol(
         if not library_name:
             library_name = ComponentName
 
-        filename = f"{output_dir}/symbol/" + library_name + ".kicad_sym"
+        #symbol_path = "/symbols"
+
+        filename = f"{output_dir}{symbol_path}/" + library_name + ".kicad_sym"
 
         logging.info(f"creating symbol {component_title} in {library_name}")
 
@@ -132,12 +135,13 @@ def create_symbol(
   )
 """
 
-    if not os.path.exists(f"{output_dir}/symbol"):
-        os.makedirs(f"{output_dir}/symbol")
+    if not os.path.exists(f"{output_dir}{symbol_path}"):
+        os.makedirs(f"{output_dir}{symbol_path}")
 
     if os.path.exists(filename):
         update_library(
             library_name,
+            symbol_path,
             ComponentName,
             template_lib_component,
             output_dir,
@@ -150,6 +154,7 @@ def create_symbol(
             f.write(template_lib_footer)
         update_library(
             library_name,
+            symbol_path,
             ComponentName,
             template_lib_component,
             output_dir,
@@ -169,7 +174,7 @@ def get_type_values_properties(start_index, component_types_values):
 
 
 def update_library(
-    library_name, component_title, template_lib_component, output_dir, skip_existing
+    library_name, symbol_path, component_title, template_lib_component, output_dir, skip_existing
 ):
     """
     if component is already in library,
@@ -178,7 +183,9 @@ def update_library(
     the component will be added at the end
     """
 
-    with open(f"{output_dir}/symbol/{library_name}.kicad_sym", "rb+") as lib_file:
+    #symbol_path = "/symbols"
+
+    with open(f"{output_dir}{symbol_path}/{library_name}.kicad_sym", "rb+") as lib_file:
         pattern = f'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 

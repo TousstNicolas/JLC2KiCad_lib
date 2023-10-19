@@ -22,14 +22,17 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
     )
     if response.status_code == requests.codes.ok:
         ensure_footprint_lib_directories(footprint_info)
-        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.step"
+        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
         with open(filename, "wb") as f:
             f.write(response.content)
 
         logging.info(f"STEP model created at {filename}")
 
         if footprint_info.model_base_variable:
-            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
+            if footprint_info.model_base_variable.startswith('$'):
+                path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.step"'
+            else:
+                path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
             kicad_mod.append(
                 Model(
                     filename=path_name,
@@ -191,12 +194,15 @@ Shape{{
 
     ensure_footprint_lib_directories(footprint_info)
 
-    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d/{footprint_info.footprint_name}.wrl"
+    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
     with open(filename, "w") as f:
         f.write(wrl_content)
 
     if footprint_info.model_base_variable:
-        path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
+        if footprint_info.model_base_variable.startswith('$'):
+            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.wrl"'
+        else:
+            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
     else:
         dirname = os.getcwd().replace("\\", "/").replace("/footprint", "")
         if os.path.isabs(filename):
@@ -215,7 +221,7 @@ Shape{{
 
     # Check if a model has already been added to the footprint to prevent duplicates
     if any(isinstance(child, Model) for child in kicad_mod.getAllChilds()):
-        logging.info(f"WRL model created at {path_name}")
+        logging.info(f"WRL model created at {filename}")
         logging.info(
             f"WRL model was not added to the footprint to prevent duplicates with STEP model"
         )
@@ -237,8 +243,8 @@ def ensure_footprint_lib_directories(footprint_info):
         os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
 
     if not os.path.exists(
-        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
+        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}"
     ):
         os.makedirs(
-            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/packages3d"
+            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}"
         )

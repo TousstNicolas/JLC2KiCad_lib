@@ -13,6 +13,7 @@ def create_footprint(
     footprint_lib,
     output_dir,
     model_base_variable,
+    model_dir,
     skip_existing,
     models,
 ):
@@ -45,6 +46,7 @@ def create_footprint(
             output_dir,
             footprint_lib,
             model_base_variable,
+            model_dir,
             origin,
             models,
         ):
@@ -58,6 +60,7 @@ def create_footprint(
             self.output_dir = output_dir
             self.footprint_lib = footprint_lib
             self.model_base_variable = model_base_variable
+            self.model_dir = model_dir
             self.origin = origin
             self.models = models
 
@@ -66,6 +69,7 @@ def create_footprint(
         output_dir=output_dir,
         footprint_lib=footprint_lib,
         model_base_variable=model_base_variable,
+        model_dir=model_dir,
         origin=translation,
         models=models,
     )

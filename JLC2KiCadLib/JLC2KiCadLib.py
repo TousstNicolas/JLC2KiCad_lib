@@ -33,6 +33,7 @@ def add_component(component_id, args):
             footprint_lib=args.footprint_lib,
             output_dir=args.output_dir,
             model_base_variable=args.model_base_variable,
+            model_dir=args.model_dir,
             skip_existing=args.skip_existing,
             models=args.models,
         )
@@ -48,6 +49,7 @@ def add_component(component_id, args):
             ),  # see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/47
             datasheet_link=datasheet_link,
             library_name=args.symbol_lib,
+            symbol_path=args.symbol_lib_path,
             output_dir=args.output_dir,
             component_id=component_id,
             skip_existing=args.skip_existing,
@@ -100,6 +102,14 @@ def main():
     )
 
     parser.add_argument(
+        "-symbol_lib_path",
+        dest="symbol_lib_path",
+        type=str,
+        default="/symbol",
+        help='Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)',
+    )
+
+    parser.add_argument(
         "-footprint_lib",
         dest="footprint_lib",
         type=str,
@@ -115,6 +125,14 @@ def main():
         type=str,
         default="STEP",
         help="Select the model you want to create. Default is STEP. If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). If you do not want any model to be generated, use the --models without arguments",
+    )
+
+    parser.add_argument(
+        "-model_dir",
+        dest="model_dir",
+        type=str,
+        default="/packages3d",
+        help='Set directory for storing 3d models, default is "/packages3d" (relative to FOOTPRINT_LIB)',
     )
 
     parser.add_argument(  # argument to skip already existing files and symbols
