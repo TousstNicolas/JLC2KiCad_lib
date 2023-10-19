@@ -37,7 +37,7 @@ def create_footprint(
     # init kicad footprint
     kicad_mod = Footprint(f'"{footprint_name}"')
     kicad_mod.setDescription(f"{footprint_name} footprint")  # TODO Set real description
-    kicad_mod.setTags(f"{footprint_name} footprint")
+    kicad_mod.setTags(f"{footprint_name} footprint {component_id}")
 
     class footprint_info:
         def __init__(
