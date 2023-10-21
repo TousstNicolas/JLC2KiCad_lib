@@ -62,8 +62,8 @@ options:
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
   -models [{STEP,WRL} ...]
-                        Select the model you want to create. Default is STEP. If both are selected, only the STEP model will be added to the footprint
-                        (the WRL model will still be generated alongside the STEP model). 
+                        Select the 3D model you want to use. Default is STEP. 
+                        If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). 
                         If you do not want any model to be generated, use the --models without arguments
   --skip_existing       use --skip_existing if you want do not want to replace already existing footprints and symbols
   -model_base_variable MODEL_BASE_VARIABLE

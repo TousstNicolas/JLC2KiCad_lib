@@ -30,23 +30,19 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
 
         if footprint_info.model_base_variable:
             path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
-            kicad_mod.append(
-                Model(
-                    filename=path_name,
-                )
-            )
-            logging.info(f"added {path_name} to footprint")
         else:
-            kicad_mod.append(
-                Model(
-                    filename=filename,
-                )
+            path_name = filename
+
+        kicad_mod.append(
+            Model(
+                filename=path_name,
             )
-            logging.info(f"added {filename} to footprint")
+        )
+        logging.info(f"added {path_name} to footprint")
 
     else:
         logging.error("request error, no Step model found")
-        return ()
+        return
 
 
 def get_WrlModel(
