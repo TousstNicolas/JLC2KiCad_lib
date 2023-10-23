@@ -59,7 +59,7 @@ options:
   --no_symbol           use --no_symbol if you do not want to create the symbol
   -symbol_lib SYMBOL_LIB
                         set symbol library name, default is "default_lib"
-  -symbol_lib_path SYMBOL_LIB_PATH
+  -symbol_lib_dir SYMBOL_LIB_DIR
                         Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"

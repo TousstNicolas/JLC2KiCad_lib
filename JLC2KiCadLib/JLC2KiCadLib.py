@@ -49,7 +49,7 @@ def add_component(component_id, args):
             ),  # see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/47
             datasheet_link=datasheet_link,
             library_name=args.symbol_lib,
-            symbol_path=args.symbol_lib_path,
+            symbol_path=args.symbol_lib_dir,
             output_dir=args.output_dir,
             component_id=component_id,
             skip_existing=args.skip_existing,
