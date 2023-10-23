@@ -224,8 +224,8 @@ def h_ARC(data, kicad_mod, footprint_info):
         mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
         # create vector from start to mid:
         vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
-        # create vector that's normal to vec1:
 
+        # create vector that's normal to vec1:
         length_squared = pow(midX, 2) - pow(vec1.distance_to((0, 0)), 2)
         if length_squared < 0:
             length_squared = 0
@@ -233,12 +233,11 @@ def h_ARC(data, kicad_mod, footprint_info):
 
         if reversed == "1":
             vec2 = vec1.rotate(-90)
-            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
-            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
         else:
             vec2 = vec1.rotate(90)
-            magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
-            vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
+
+        magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+        vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
 
         # calculate the lenght from mid to centre using pythagoras:
         length = sqrt(length_squared)

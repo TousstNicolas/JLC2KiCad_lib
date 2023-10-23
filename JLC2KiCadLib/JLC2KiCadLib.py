@@ -124,7 +124,7 @@ def main():
         choices=["STEP", "WRL"],
         type=str,
         default="STEP",
-        help="Select the model you want to create. Default is STEP. If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). If you do not want any model to be generated, use the --models without arguments",
+        help="Select the 3D model you want to use. Default is STEP. If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). If you do not want any model to be generated, use the --models without arguments",
     )
 
     parser.add_argument(
