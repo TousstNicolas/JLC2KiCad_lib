@@ -102,8 +102,8 @@ def main():
     )
 
     parser.add_argument(
-        "-symbol_lib_path",
-        dest="symbol_lib_path",
+        "-symbol_lib_dir",
+        dest="symbol_lib_dir",
         type=str,
         default="/symbol",
         help='Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)',
