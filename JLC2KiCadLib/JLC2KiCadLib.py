@@ -147,7 +147,7 @@ def main():
         dest="model_base_variable",
         type=str,
         default="",
-        help="Use -model_base_variable if you want to specifie the base path of the 3D model using a path variable",
+        help="Use -model_base_variable if you want to specify the base path of the 3D model using a path variable. If the specified variable starts with '$' it is used 'as-is', otherwise it is encapsulated: $(MODEL_BASE_VARIABLE)",
     )
 
     parser.add_argument(

@@ -59,15 +59,18 @@ options:
   --no_symbol           use --no_symbol if you do not want to create the symbol
   -symbol_lib SYMBOL_LIB
                         set symbol library name, default is "default_lib"
+  -symbol_lib_path SYMBOL_LIB_PATH
+                        Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
   -models [{STEP,WRL} ...]
                         Select the 3D model you want to use. Default is STEP. 
                         If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). 
                         If you do not want any model to be generated, use the --models without arguments
+  -model_dir MODEL_DIR  Set directory for storing 3d models, default is "/packages3d" (relative to FOOTPRINT_LIB)
   --skip_existing       use --skip_existing if you want do not want to replace already existing footprints and symbols
   -model_base_variable MODEL_BASE_VARIABLE
-                        use -model_base_variable if you want to specifie the base path of the 3D model using a path variable
+                        use -model_base_variable if you want to specify the base path of the 3D model using a path variable
   -logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         set logging level. If DEBUG is used, the debug logs are only written in the log file if the option --log_file is set
   --log_file            use --log_file if you want logs to be written in a file
