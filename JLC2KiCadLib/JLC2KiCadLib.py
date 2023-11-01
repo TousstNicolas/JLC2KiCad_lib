@@ -105,8 +105,8 @@ def main():
         "-symbol_lib_dir",
         dest="symbol_lib_dir",
         type=str,
-        default="/symbol",
-        help='Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)',
+        default="symbol",
+        help='Set symbol library path, default is "symbol" (relative to OUTPUT_DIR)',
     )
 
     parser.add_argument(
@@ -131,8 +131,8 @@ def main():
         "-model_dir",
         dest="model_dir",
         type=str,
-        default="/packages3d",
-        help='Set directory for storing 3d models, default is "/packages3d" (relative to FOOTPRINT_LIB)',
+        default="packages3d",
+        help='Set directory for storing 3d models, default is "packages3d" (relative to FOOTPRINT_LIB)',
     )
 
     parser.add_argument(  # argument to skip already existing files and symbols

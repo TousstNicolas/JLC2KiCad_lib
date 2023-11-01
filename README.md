@@ -60,14 +60,14 @@ options:
   -symbol_lib SYMBOL_LIB
                         set symbol library name, default is "default_lib"
   -symbol_lib_dir SYMBOL_LIB_DIR
-                        Set symbol library path, default is "/symbol" (relative to OUTPUT_DIR)
+                        Set symbol library path, default is "symbol" (relative to OUTPUT_DIR)
   -footprint_lib FOOTPRINT_LIB
                         set footprint library name, default is "footprint"
   -models [{STEP,WRL} ...]
                         Select the 3D model you want to use. Default is STEP. 
                         If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). 
                         If you do not want any model to be generated, use the --models without arguments
-  -model_dir MODEL_DIR  Set directory for storing 3d models, default is "/packages3d" (relative to FOOTPRINT_LIB)
+  -model_dir MODEL_DIR  Set directory for storing 3d models, default is "packages3d" (relative to FOOTPRINT_LIB)
   --skip_existing       use --skip_existing if you want do not want to replace already existing footprints and symbols
   -model_base_variable MODEL_BASE_VARIABLE
                         use -model_base_variable if you want to specify the base path of the 3D model using a path variable
@@ -82,21 +82,30 @@ exemple use :
 
 The only required arguments are the JLCPCP_part number (e.g. Cxxxxx)
 
-Example usage : `JLC2KiCadLib C1337258 C24112 -dir My_lib -symbol_lib My_symbol_lib`
+Example usage : 
+```
+JLC2KiCadLib C1337258 C24112 -dir My_lib                       \
+                             -model_dir My_model_dir           \
+                             -footprint_lib My_footprint_lib   \
+                             -symbol_lib_dir My_symbol_lib_dir \
+                             -symbol_lib My_symbol_lib
+```
 
 This example will create the symbol, footprint and 3D model for the two components specified and will output the symbol in the `./My_lib/symbol/My_symbol_lib.lib` file, the footprint and 3D model will be created in the `./My_lib/Footprint`. This will result in the following tree to be created : 
 
 ```
 My_lib
-├── footprint
-│   ├── packages3d
+├── My_footprint_lib
+│   ├── My_model_dir
 │   │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.step
 │   │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.step
 │   ├── QFN-24_L4.0-W4.0-P0.50-BL-EP2.7.kicad_mod
 │   └── VQFN-48_L7.0-W7.0-P0.50-BL-EP5.5.kicad_mod
-└── symbol
+└── My_symbol_lib_dir
     └── My_symbol_lib.kicad_sym
 ```
+
+Most of those arguments are optional. The only required argument is the JLCPCB part #.
 
 The JLCPCB part # is found in the part info section of every component in the JLCPCB part library. 
 

@@ -21,8 +21,8 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
         f"https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{component_uuid}"
     )
     if response.status_code == requests.codes.ok:
-        ensure_footprint_lib_directories(footprint_info)
-        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
+        ensure_footprint_lib_directories_exist(footprint_info)
+        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
         with open(filename, "wb") as f:
             f.write(response.content)
 
@@ -188,9 +188,9 @@ Shape{{
     x_middle = (max(x_list) + min(x_list)) / 2
     y_middle = (max(y_list) + min(y_list)) / 2
 
-    ensure_footprint_lib_directories(footprint_info)
+    ensure_footprint_lib_directories_exist(footprint_info)
 
-    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
+    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
     with open(filename, "w") as f:
         f.write(wrl_content)
 
@@ -232,15 +232,15 @@ Shape{{
         logging.info(f"added {path_name} to footprintc")
 
 
-def ensure_footprint_lib_directories(footprint_info):
+def ensure_footprint_lib_directories_exist(footprint_info):
     if not os.path.exists(
         f"{footprint_info.output_dir}/{footprint_info.footprint_lib}"
     ):
         os.makedirs(f"{footprint_info.output_dir}/{footprint_info.footprint_lib}")
 
     if not os.path.exists(
-        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}"
+        f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}"
     ):
         os.makedirs(
-            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}{footprint_info.model_dir}"
+            f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}"
         )

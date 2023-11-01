@@ -84,7 +84,7 @@ def create_symbol(
         if not library_name:
             library_name = ComponentName
 
-        filename = f"{output_dir}{symbol_path}/" + library_name + ".kicad_sym"
+        filename = f"{output_dir}/{symbol_path}/{library_name}.kicad_sym"
 
         logging.info(f"creating symbol {component_title} in {library_name}")
 
@@ -133,8 +133,8 @@ def create_symbol(
   )
 """
 
-    if not os.path.exists(f"{output_dir}{symbol_path}"):
-        os.makedirs(f"{output_dir}{symbol_path}")
+    if not os.path.exists(f"{output_dir}/{symbol_path}"):
+        os.makedirs(f"{output_dir}/{symbol_path}")
 
     if os.path.exists(filename):
         update_library(
@@ -181,7 +181,7 @@ def update_library(
     the component will be added at the end
     """
 
-    with open(f"{output_dir}{symbol_path}/{library_name}.kicad_sym", "rb+") as lib_file:
+    with open(f"{output_dir}/{symbol_path}/{library_name}.kicad_sym", "rb+") as lib_file:
         pattern = f'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 
