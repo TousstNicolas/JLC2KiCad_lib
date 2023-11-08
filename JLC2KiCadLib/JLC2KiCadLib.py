@@ -59,7 +59,7 @@ def add_component(component_id, args):
 def main():
     parser = argparse.ArgumentParser(
         description="take a JLCPCB part # and create the according component's kicad's library",
-        epilog="example use : \n	python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint",
+        epilog="example use : \n	JLC2KiCadLib C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 

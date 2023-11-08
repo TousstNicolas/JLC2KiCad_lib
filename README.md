@@ -77,7 +77,7 @@ options:
   --version             Print versin number and exit
 
 exemple use : 
-        python3 JLC2KiCad_lib.py C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint
+        JLC2KiCadLib C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint
 ```
 
 The only required arguments are the JLCPCP_part number (e.g. Cxxxxx)
