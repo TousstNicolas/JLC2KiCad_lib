@@ -19,9 +19,9 @@ This script requires **Python 3.6** or higher.
 
 easyEDA origin | KiCad result
 ---- | ----
-![JLCSymbol](images/JLC_Symbol_1.png) | ![KiCadSymbol](images/KiCad_Symbol_1.png)
-![JLCFootprint](images/JLC_Footprint_1.png) | ![KiCadFootprint](images/KiCad_Footprint_1.png)
-![JLC3Dmodel](images/JLC_3Dmodel.png) | ![KiCad3Dmodel](images/KiCad_3Dmodel.png)
+![JLCSymbol](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/JLC_Symbol_1.png) | ![KiCadSymbol](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/KiCad_Symbol_1.png)
+![JLCFootprint](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/JLC_Footprint_1.png) | ![KiCadFootprint](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/KiCad_Footprint_1.png)
+![JLC3Dmodel](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/JLC_3Dmodel.png) | ![KiCad3Dmodel](https://raw.githubusercontent.com/TousstNicolas/JLC2KiCad_lib/master/images/KiCad_3Dmodel.png)
 
 ## Installation
 
