@@ -86,6 +86,14 @@ def create_footprint(
         else:
             handlers.get(model)(args[1:], kicad_mod, footprint_info)
 
+    if any(
+        isinstance(child, Pad) and child.type == Pad.TYPE_THT
+        for child in kicad_mod.getAllChilds()
+    ):
+        kicad_mod.setAttribute("through_hole")
+    else:
+        kicad_mod.setAttribute("smd")
+
     kicad_mod.insert(Translation(-mil2mm(translation[0]), -mil2mm(translation[1])))
 
     # Translate the footprint max and min values to the origin
