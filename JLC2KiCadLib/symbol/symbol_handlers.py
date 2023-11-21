@@ -94,8 +94,8 @@ def h_P(data, translation, kicad_symbol):
     pinNumber = data[2]
     pinName = data[13]
 
-    X = mil2mm(float(data[3]) - translation[0])
-    Y = -mil2mm(float(data[4]) - translation[1])
+    X = round(mil2mm(float(data[3]) - translation[0]), 3)
+    Y = round(-mil2mm(float(data[4]) - translation[1]), 3)
 
     if data[5] in ["0", "90", "180", "270"]:
         rotation = (int(data[5]) + 180) % 360
@@ -106,7 +106,7 @@ def h_P(data, translation, kicad_symbol):
         )
 
     if rotation == 0 or rotation == 180:
-        length = mil2mm(abs(float(data[8].split("h")[-1])))
+        length = round(mil2mm(abs(float(data[8].split("h")[-1]))), 3)
     elif rotation == 90 or rotation == 270:
         length = mil2mm(abs(float(data[8].split("v")[-1])))
 

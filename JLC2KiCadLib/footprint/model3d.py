@@ -29,7 +29,7 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
         logging.info(f"STEP model created at {filename}")
 
         if footprint_info.model_base_variable:
-            if footprint_info.model_base_variable.startswith('$'):
+            if footprint_info.model_base_variable.startswith("$"):
                 path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.step"'
             else:
                 path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
@@ -195,7 +195,7 @@ Shape{{
         f.write(wrl_content)
 
     if footprint_info.model_base_variable:
-        if footprint_info.model_base_variable.startswith('$'):
+        if footprint_info.model_base_variable.startswith("$"):
             path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.wrl"'
         else:
             path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
