@@ -10,7 +10,19 @@ wrl_header = """#VRML V2.0 utf8
 """
 
 
-def get_StepModel(component_uuid, footprint_info, kicad_mod):
+def mil2mm(data):
+    return float(data) / 3.937
+
+
+def get_StepModel(
+    component_uuid,
+    footprint_info,
+    kicad_mod,
+    translationX,
+    translationY,
+    translationZ,
+    rotation,
+):
     logging.info(f"Downloading STEP Model ...")
 
     # `qAxj6KHrDKw4blvCG8QJPs7Y` is a constant in
@@ -20,32 +32,38 @@ def get_StepModel(component_uuid, footprint_info, kicad_mod):
     response = requests.get(
         f"https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{component_uuid}"
     )
-    if response.status_code == requests.codes.ok:
-        ensure_footprint_lib_directories_exist(footprint_info)
-        filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
-        with open(filename, "wb") as f:
-            f.write(response.content)
 
-        logging.info(f"STEP model created at {filename}")
-
-        if footprint_info.model_base_variable:
-            if footprint_info.model_base_variable.startswith("$"):
-                path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.step"'
-            else:
-                path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
-        else:
-            path_name = filename
-
-        kicad_mod.append(
-            Model(
-                filename=path_name,
-            )
-        )
-        logging.info(f"added {path_name} to footprint")
-
-    else:
+    if not response.status_code == requests.codes.ok:
         logging.error("request error, no Step model found")
         return
+
+    ensure_footprint_lib_directories_exist(footprint_info)
+    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+    logging.info(f"STEP model created at {filename}")
+
+    if footprint_info.model_base_variable:
+        if footprint_info.model_base_variable.startswith("$"):
+            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.step"'
+        else:
+            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
+    else:
+        path_name = filename
+
+    translationX = (translationX - footprint_info.origin[0]) / 100
+    translationY = -(translationY - footprint_info.origin[1]) / 100
+    translationZ = float(translationZ) / 100
+
+    kicad_mod.append(
+        Model(
+            filename=path_name,
+            at=[translationX, translationY, translationZ],
+            rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
+        )
+    )
+    logging.info(f"added {path_name} to footprint")
 
 
 def get_WrlModel(
@@ -67,14 +85,6 @@ def get_WrlModel(
     else:
         logging.error("request error, no 3D model found")
         return ()
-
-    """
-	translationX, translationY, translationZ = (
-		0,
-		0,
-		float(translationZ) / 3.048,
-	)  # foot to mm
-	"""
 
     wrl_content = wrl_header
 
@@ -164,30 +174,6 @@ Shape{{
 
         wrl_content += shape_str
 
-    # find the lowest point of the model
-    lowest_point = 0
-    for point in vertices:
-        if float(point.split(" ")[2]) < lowest_point:
-            lowest_point = float(point.split(" ")[2])
-
-    # convert lowest point to mm
-    min_z = lowest_point * 2.54
-
-    # calculate the translation Z value
-    from .footprint_handlers import mil2mm
-
-    Zmm = mil2mm(translationZ)
-    translation_z = Zmm - min_z
-
-    # find the x and y middle of the model
-    x_list = []
-    y_list = []
-    for point in vertices:
-        x_list.append(float(point.split(" ")[0]))
-        y_list.append(float(point.split(" ")[1]))
-    x_middle = (max(x_list) + min(x_list)) / 2
-    y_middle = (max(y_list) + min(y_list)) / 2
-
     ensure_footprint_lib_directories_exist(footprint_info)
 
     filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
@@ -206,14 +192,9 @@ Shape{{
         else:
             path_name = f"{dirname}/{filename}"
 
-        # Calculate the translation between the center of the pads and the center of the whole footprint
-    translation_x = translationX - footprint_info.origin[0]
-    translation_y = translationY - footprint_info.origin[1]
-
-    # Convert to inches
-    translation_x_inches = translation_x / 100 + x_middle / 10
-    translation_y_inches = -translation_y / 100 - y_middle / 10
-    translation_z_inches = translation_z / 25.4
+    translationX = (translationX - footprint_info.origin[0]) / 100
+    translationY = -(translationY - footprint_info.origin[1]) / 100
+    translationZ = float(translationZ) / 100
 
     # Check if a model has already been added to the footprint to prevent duplicates
     if any(isinstance(child, Model) for child in kicad_mod.getAllChilds()):
@@ -225,7 +206,7 @@ Shape{{
         kicad_mod.append(
             Model(
                 filename=path_name,
-                at=[translation_x_inches, translation_y_inches, translation_z_inches],
+                at=[translationX, translationY, translationZ],
                 rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
             )
         )

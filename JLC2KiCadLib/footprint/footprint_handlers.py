@@ -351,15 +351,19 @@ def h_SVGNODE(data, kicad_mod, footprint_info):
         logging.exception("footprint handler, h_SVGNODE : failed to parse json data")
         return ()
 
+    c_origin = data["attrs"]["c_origin"].split(",")
     if "STEP" in footprint_info.models:
         get_StepModel(
             component_uuid=data["attrs"]["uuid"],
             footprint_info=footprint_info,
             kicad_mod=kicad_mod,
+            translationX=float(c_origin[0]),
+            translationY=float(c_origin[1]),
+            translationZ=data["attrs"]["z"],
+            rotation=data["attrs"]["c_rotation"],
         )
 
     if "WRL" in footprint_info.models:
-        c_origin = data["attrs"]["c_origin"].split(",")
         get_WrlModel(
             component_uuid=data["attrs"]["uuid"],
             footprint_info=footprint_info,
