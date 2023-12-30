@@ -13,7 +13,7 @@
 JLC2KiCadLib is a python script that generate a component library (symbol, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.
 This script requires **Python 3.6** or higher.
 
-## Exemple 
+## Example 
 
 
 
