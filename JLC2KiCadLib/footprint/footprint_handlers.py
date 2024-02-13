@@ -76,6 +76,23 @@ def h_TRACK(data, kicad_mod, footprint_info):
 
 
 def h_PAD(data, kicad_mod, footprint_info):
+    """
+    Append a pad to the footprint
+
+    data : {
+        0 : shape type
+        1 : pad position x
+        1 : pad position y
+        3 : pad size x
+        4 : pad size y
+        5 :
+        6 : pad number
+        7 : drill size
+        8 :
+    }
+    """
+    # pylint: disable=unused-argument
+
     shape_correspondance = {
         "OVAL": "SHAPE_OVAL",
         "RECT": "SHAPE_RECT",
@@ -89,42 +106,25 @@ def h_PAD(data, kicad_mod, footprint_info):
     data[4] = mil2mm(data[4])
     data[7] = mil2mm(data[7])
 
-    pad_number = data[6]
     at = [data[1], data[2]]
     size = [data[3], data[4]]
-    drill_size = data[7] * 2
+    pad_number = data[6]
     primitives = ""
 
-    if data[0] in shape_correspondance:
-        shape = shape_correspondance[data[0]]
-    else:
-        logging.error(
-            "footprint handler, pad : no correspondance found, using default SHAPE_OVAL"
-        )
-        shape = "SHAPE_OVAL"
-
-    # if pad is Circle, no rotation is specified
-    if shape == "SHAPE_CIRCLE":
-        rotation = 0
-    else:
-        rotation = float(data[9])
-
     if data[5] == "1":
-        drill_size = 1
         pad_type = Pad.TYPE_SMT
         pad_layer = Pad.LAYERS_SMT
-        if shape == "SHAPE_CUSTOM":
-            points = []
-            for i, coord in enumerate(data[8].split(" ")):
-                points.append(mil2mm(coord) - at[i % 2])
-            primitives = [Polygon(nodes=zip(points[::2], points[1::2]))]
-            size = [0.1, 0.1]
-            rotation = 0
-
-    elif data[5] == "11" and shape == "SHAPE_OVAL":
+        drill_size = 1
+    else:
         pad_type = Pad.TYPE_THT
         pad_layer = Pad.LAYERS_THT
+        drill_size = data[7] * 2
+
+    if data[0] == "OVAL":
+        shape = getattr(Pad, "SHAPE_OVAL")
+        rotation = float(data[9])
         data[11] = mil2mm(data[11])
+
         if data[11] == 0:
             drill_size = data[7] * 2
         elif (data[7] * 2 < data[11]) ^ (
@@ -134,24 +134,45 @@ def h_PAD(data, kicad_mod, footprint_info):
         else:
             drill_size = [data[11], data[7] * 2]
 
-    elif data[5] == "11" and shape == "SHAPE_CIRCLE":
-        pad_type = Pad.TYPE_THT
-        pad_layer = Pad.LAYERS_THT
+    elif data[0] == "RECT":
+        shape = getattr(Pad, "SHAPE_RECT")
+        rotation = float(data[9])
+        data[11] = mil2mm(data[11])
 
-    elif data[5] == "11" and shape == "SHAPE_RECT":
-        if float(data[11]) == 0:  # Check if the hole is oval
+        if data[5] == "1":
+            drill_size = 1
+        elif float(data[11]) == 0:  # Check if the hole is oval
             pass
         else:
-            drill_size = [drill_size, mil2mm(data[11])]
+            drill_size = [data[7] * 2, data[11]]
 
-        pad_type = Pad.TYPE_THT
-        pad_layer = Pad.LAYERS_THT
+    elif data[0] == "ELLIPSE":
+        shape = getattr(Pad, "SHAPE_CIRCLE")
+        # if pad is a circle, no rotation is specified
+        rotation = 0
+
+    elif data[0] == "POLYGON":
+        shape = getattr(Pad, "SHAPE_CUSTOM")
+        data[11] = mil2mm(data[11])
+        rotation = float(data[9])
+        points = []
+        for i, coord in enumerate(data[8].split(" ")):
+            points.append(mil2mm(coord) - at[i % 2])
+        primitives = [Polygon(nodes=zip(points[::2], points[1::2]))]
+        size = [0.1, 0.1]
+        rotation = 0
+
+        if float(data[11]) == 0:  # Check if the hole is oval
+            drill_size = 1
+        else:
+            drill_size = [data[7] * 2, data[11]]
 
     else:
-        logging.warning(
-            f"footprint handler, pad : unknown assembly_process skiping pad n° : {pad_number}"
+        logging.error(
+            "footprint handler, pad : no correspondance found, using default SHAPE_OVAL"
         )
-        return ()
+        shape = getattr(Pad, "SHAPE_OVAL")
+        rotation = float(data[9])
 
     # update footprint borders
     footprint_info.max_X = max(footprint_info.max_X, data[1])
@@ -163,7 +184,7 @@ def h_PAD(data, kicad_mod, footprint_info):
         Pad(
             number=pad_number,
             type=pad_type,
-            shape=getattr(Pad, shape),
+            shape=shape,
             at=at,
             size=size,
             rotation=rotation,
