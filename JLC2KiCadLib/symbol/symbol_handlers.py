@@ -111,11 +111,16 @@ def h_P(data, translation, kicad_symbol):
         length = mil2mm(abs(float(data[8].split("v")[-1])))
 
     try:
-        if not kicad_symbol.pinNamesHide and data[9].split("^^")[1] == "0":
-            kicad_symbol.pinNamesHide = "(pin_names hide)"
-        if not kicad_symbol.pinNumbersHide and data[17].split("^^")[1] == "0":
-            kicad_symbol.pinNumbersHide = "(pin_numbers hide)"
+        # If on pin name/number is not hidden, show set the synmbol hide property to 0
+        if data[9].split("^^")[1] != "0":
+            kicad_symbol.pinNamesHide = ""
+        if data[17].split("^^")[1] != "0":
+            kicad_symbol.pinNumbersHide = ""
+    except Exception :
+            kicad_symbol.pinNamesHide = ""
+            kicad_symbol.pinNumbersHide = ""
 
+    try :
         nameSize = mil2mm(float(data[16].replace("pt", "")))
         numberSize = mil2mm(float(data[24].replace("pt", "")))
     except Exception:

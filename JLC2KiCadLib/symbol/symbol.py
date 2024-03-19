@@ -34,8 +34,8 @@ def create_symbol(
 ):
     class kicad_symbol:
         drawing = ""
-        pinNamesHide = ""
-        pinNumbersHide = ""
+        pinNamesHide =  "(pin_names hide)"
+        pinNumbersHide =  "(pin_numbers hide)"
 
     kicad_symbol = kicad_symbol()
 
