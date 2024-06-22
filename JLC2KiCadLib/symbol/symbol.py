@@ -59,6 +59,7 @@ def create_symbol(
             .replace("/", "_")
             .replace(" ", "_")
             .replace(".", "_")
+            .replace(":", "{colon}")
         )
 
         component_types_values = []
