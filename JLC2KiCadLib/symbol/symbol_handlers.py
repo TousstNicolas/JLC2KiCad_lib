@@ -116,11 +116,11 @@ def h_P(data, translation, kicad_symbol):
             kicad_symbol.pinNamesHide = ""
         if data[17].split("^^")[1] != "0":
             kicad_symbol.pinNumbersHide = ""
-    except Exception :
-            kicad_symbol.pinNamesHide = ""
-            kicad_symbol.pinNumbersHide = ""
+    except Exception:
+        kicad_symbol.pinNamesHide = ""
+        kicad_symbol.pinNumbersHide = ""
 
-    try :
+    try:
         nameSize = mil2mm(float(data[16].replace("pt", "")))
         numberSize = mil2mm(float(data[24].replace("pt", "")))
     except Exception:

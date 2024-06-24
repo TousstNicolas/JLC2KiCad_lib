@@ -34,8 +34,8 @@ def create_symbol(
 ):
     class kicad_symbol:
         drawing = ""
-        pinNamesHide =  "(pin_names hide)"
-        pinNumbersHide =  "(pin_numbers hide)"
+        pinNamesHide = "(pin_names hide)"
+        pinNumbersHide = "(pin_numbers hide)"
 
     kicad_symbol = kicad_symbol()
 
@@ -56,10 +56,14 @@ def create_symbol(
         ].replace("?", "")
         component_title = (
             data["result"]["title"]
-            .replace("/", "_")
             .replace(" ", "_")
             .replace(".", "_")
+            .replace("/", "{slash}")
+            .replace("\\", "{backslash}")
+            .replace("<", "{lt}")
+            .replace(">", "{gt}")
             .replace(":", "{colon}")
+            .replace('"', "{dblquote}")
         )
 
         component_types_values = []
