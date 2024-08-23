@@ -58,7 +58,7 @@ def get_StepModel(
 
     kicad_mod.append(
         Model(
-            filename=path_name,
+            filename=f"{footprint_info.model_dir}/{footprint_info.footprint_name}.step", # was path_name but relative path improves portability
             at=[translationX, translationY, translationZ],
             rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
         )
@@ -205,7 +205,7 @@ Shape{{
     else:
         kicad_mod.append(
             Model(
-                filename=path_name,
+                filename=f"{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl", # was path_name but relative path improves portability
                 at=[translationX, translationY, translationZ],
                 rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
             )
