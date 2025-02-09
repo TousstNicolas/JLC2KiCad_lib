@@ -4,7 +4,6 @@ import re
 import os
 import logging
 
-from KicadModTree import *
 from .symbol_handlers import *
 
 

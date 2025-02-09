@@ -1,9 +1,19 @@
 import json
 import logging
-from math import pow, acos, pi
+from math import pow, acos, pi, sqrt
 import re
 
-from KicadModTree import *
+from KicadModTree import (
+    Line,
+    Pad,
+    Polygon,
+    Vector2D,
+    Arc,
+    Circle,
+    RectFill,
+    Text,
+    RectLine,
+)
 from .model3d import get_WrlModel, get_StepModel
 
 __all__ = [
@@ -82,7 +92,7 @@ def h_PAD(data, kicad_mod, footprint_info):
     data : {
         0 : shape type
         1 : pad position x
-        1 : pad position y
+        2 : pad position y
         3 : pad size x
         4 : pad size y
         5 :
@@ -92,13 +102,6 @@ def h_PAD(data, kicad_mod, footprint_info):
     }
     """
     # pylint: disable=unused-argument
-
-    shape_correspondance = {
-        "OVAL": "SHAPE_OVAL",
-        "RECT": "SHAPE_RECT",
-        "ELLIPSE": "SHAPE_CIRCLE",
-        "POLYGON": "SHAPE_CUSTOM",
-    }
 
     data[1] = mil2mm(data[1])
     data[2] = mil2mm(data[2])
@@ -196,7 +199,11 @@ def h_PAD(data, kicad_mod, footprint_info):
 
 
 def h_ARC(data, kicad_mod, footprint_info):
-    # append an Arc to the footprint
+    """
+    append an Arc to the footprint
+    """
+    # pylint: disable=unused-argument
+
     try:
         # parse the data
         if data[2][0] == "M":
@@ -223,6 +230,8 @@ def h_ARC(data, kicad_mod, footprint_info):
             logging.warning(
                 "footprint handler, h_ARC : failed to parse footprint ARC data"
             )
+            return
+
         width = data[0]
 
         width = mil2mm(width)
@@ -303,7 +312,7 @@ def h_ARC(data, kicad_mod, footprint_info):
                 Arc(start=start, end=end, width=width, center=cen, layer=layer)
             )
 
-    except Exception as e:
+    except Exception:
         logging.exception("footprint handler, h_ARC: failed to add ARC")
 
 

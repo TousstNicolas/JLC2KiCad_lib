@@ -109,6 +109,11 @@ def h_P(data, translation, kicad_symbol):
         length = round(mil2mm(abs(float(data[8].split("h")[-1]))), 3)
     elif rotation == 90 or rotation == 270:
         length = mil2mm(abs(float(data[8].split("v")[-1])))
+    else:
+        length = 2.54
+        logging.warning(
+            f'symbol : pin number {pinNumber} : "{pinName}" failed to find length. Using Default length'
+        )
 
     try:
         # If on pin name/number is not hidden, show set the synmbol hide property to 0

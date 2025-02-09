@@ -2,7 +2,7 @@ import requests
 import logging
 import os
 import re
-from KicadModTree import *
+from KicadModTree import Model
 
 wrl_header = """#VRML V2.0 utf8
 #created by JLC2KiCad_lib using the JLCPCB library
