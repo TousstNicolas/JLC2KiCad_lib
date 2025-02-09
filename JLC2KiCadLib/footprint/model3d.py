@@ -46,11 +46,11 @@ def get_StepModel(
 
     if footprint_info.model_base_variable:
         if footprint_info.model_base_variable.startswith("$"):
-            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.step"'
+            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"'
         else:
-            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.step"'
+            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"'
     else:
-        path_name = filename
+        path_name = f"{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
 
     translationX = (translationX - footprint_info.origin[0]) / 100
     translationY = -(translationY - footprint_info.origin[1]) / 100
@@ -58,7 +58,7 @@ def get_StepModel(
 
     kicad_mod.append(
         Model(
-            filename=f"{footprint_info.model_dir}/{footprint_info.footprint_name}.step", # was path_name but relative path improves portability
+            filename=path_name,
             at=[translationX, translationY, translationZ],
             rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
         )
@@ -182,15 +182,11 @@ Shape{{
 
     if footprint_info.model_base_variable:
         if footprint_info.model_base_variable.startswith("$"):
-            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.footprint_name}.wrl"'
+            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"'
         else:
-            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.footprint_name}.wrl"'
+            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"'
     else:
-        dirname = os.getcwd().replace("\\", "/").replace("/footprint", "")
-        if os.path.isabs(filename):
-            path_name = filename
-        else:
-            path_name = f"{dirname}/{filename}"
+        path_name = f"{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
 
     translationX = (translationX - footprint_info.origin[0]) / 100
     translationY = -(translationY - footprint_info.origin[1]) / 100
@@ -205,7 +201,7 @@ Shape{{
     else:
         kicad_mod.append(
             Model(
-                filename=f"{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl", # was path_name but relative path improves portability
+                filename=path_name,
                 at=[translationX, translationY, translationZ],
                 rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
             )
