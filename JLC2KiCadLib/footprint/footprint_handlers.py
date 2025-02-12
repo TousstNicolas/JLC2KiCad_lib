@@ -205,49 +205,40 @@ def h_ARC(data, kicad_mod, footprint_info):
     # pylint: disable=unused-argument
 
     try:
-        # parse the data
-        if data[2][0] == "M":
-            startX, startY, midX, midY, _, reversed, direction, endX, endY = [
-                val
-                for val in data[2]
-                .replace("M", "")
-                .replace("A", "")
-                .replace(",", " ")
-                .split(" ")
-                if val
-            ]
-        elif data[3][0] == "M":
-            startX, startY, midX, midY, _, reversed, direction, endX, endY = [
-                val
-                for val in data[3]
-                .replace("M", "")
-                .replace("A", "")
-                .replace(",", " ")
-                .split(" ")
-                if val
-            ]
-        else:
-            logging.warning(
-                "footprint handler, h_ARC : failed to parse footprint ARC data"
-            )
+
+        svg_path = data[2]
+
+        # Regular expression to match ARC pattern
+        # coordinates can sometime be separated by a "," instead of a space, therefore we match it using [\s,*?]
+        pattern = r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
+        
+        match = re.search(pattern, svg_path)
+        
+        if not match:
+            logging.error("footprint handler, h_ARC: Failed to parse ARC")
             return
+        
+        # Extract values
+        start_x, start_y = float(match.group(1)), float(match.group(2))
+        rx, ry = float(match.group(3)), float(match.group(4))
+        _ = float(match.group(5)) # rotation ?
+        large_arc_flag = int(match.group(6))
+        sweep_flag = int(match.group(7))
+        end_x, end_y = float(match.group(8)), float(match.group(9))
 
         width = data[0]
 
         width = mil2mm(width)
-        startX = mil2mm(startX)
-        startY = mil2mm(startY)
-        midX = mil2mm(midX)
-        midY = mil2mm(midY)
-        endX = mil2mm(endX)
-        endY = mil2mm(endY)
+        start_x = mil2mm(start_x)
+        start_y = mil2mm(start_y)
+        mid_x = mil2mm(rx)
+        mid_y = mil2mm(ry)
+        end_x = mil2mm(end_x)
+        end_y = mil2mm(end_y)
 
-        if midX != midY:
-            logging.warning("Unexpected arc, midX != midY")
-
-        start = [startX, startY]
-        end = [endX, endY]
-        if direction == "0":
+        start = [start_x, start_y]
+        end = [end_x, end_y]
+        if sweep_flag == 0:
             start, end = end, start
 
         # find the midpoint of start and end
@@ -256,12 +247,12 @@ def h_ARC(data, kicad_mod, footprint_info):
         vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
 
         # create vector that's normal to vec1:
-        length_squared = pow(midX, 2) - pow(vec1.distance_to((0, 0)), 2)
+        length_squared = mid_x * mid_y - pow(vec1.distance_to((0, 0)), 2)
         if length_squared < 0:
             length_squared = 0
-            reversed = "1"
+            large_arc_flag = 1
 
-        if reversed == "1":
+        if large_arc_flag == 1:
             vec2 = vec1.rotate(-90)
         else:
             vec2 = vec1.rotate(90)
@@ -294,23 +285,15 @@ def h_ARC(data, kicad_mod, footprint_info):
         try:
             layer = layer_correspondance[data[1]]
         except KeyError:
-            logging.warning("footprint handler, h_ARC : layer correspondance not found")
+            logging.warning("footprint handler, h_ARC : layer correspondance not found. Adding arc on default F.Silks layer")
             layer = "F.SilkS"
-        if reversed == "1":
-            kicad_mod.append(
-                Arc(
-                    start=start,
-                    end=end,
-                    width=width,
-                    angle=360 - angle,
-                    center=cen,
-                    layer=layer,
-                )
-            )
-        else:
-            kicad_mod.append(
-                Arc(start=start, end=end, width=width, center=cen, layer=layer)
-            )
+
+        if large_arc_flag == 1:
+            angle = 360 - angle
+
+        kicad_mod.append(
+            Arc(start=start, end=end, width=width, center=cen, layer=layer)
+        )
 
     except Exception:
         logging.exception("footprint handler, h_ARC: failed to add ARC")
