@@ -17,7 +17,7 @@ def create_footprint(
     skip_existing,
     models,
 ):
-    logging.info("creating footprint ...")
+    logging.info("Creating footprint ...")
 
     (
         footprint_name,

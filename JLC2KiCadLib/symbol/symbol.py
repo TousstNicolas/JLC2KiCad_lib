@@ -90,7 +90,7 @@ def create_symbol(
 
         filename = f"{output_dir}/{symbol_path}/{library_name}.kicad_sym"
 
-        logging.info(f"creating symbol {component_title} in {library_name}")
+        logging.info(f"Creating symbol {component_title} in {library_name}")
 
         kicad_symbol.drawing += f'''\n    (symbol "{component_title}_1"'''
 
