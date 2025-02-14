@@ -164,10 +164,8 @@ def h_PAD(data, kicad_mod, footprint_info):
     elif data[0] == "RECT":
         shape = Pad.SHAPE_RECT
 
-        if layer == MULTILAYER:
-            drill_size = 1  # TODO TO BE CHECKED
-        elif drill_offset == 0:  # Check if the hole is oval
-            pass
+        if drill_offset == 0:
+            drill_size = drill_diameter
         else:
             drill_size = [drill_diameter, drill_offset]
 
