@@ -53,18 +53,14 @@ def mil2mm(data):
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
-    data[0] = mil2mm(data[0])
-    width = data[0]
-    try:
+
+    width = mil2mm(data[0])
+
+    # "S$xx" is sometimes inserted at index 2 ?
+    if "$" in data[2]:
+        points = [mil2mm(p) for p in data[3].split(" ") if p]
+    else:
         points = [mil2mm(p) for p in data[2].split(" ") if p]
-    except Exception:
-        if len(data) > 5:
-            points = [mil2mm(p) for p in data[3].split(" ") if p]
-        else:
-            logging.warning(
-                "footprint handler, h_TRACK: error while parsing the line's points, skipping line"
-            )
-            return ()
 
     for i in range(int(len(points) / 2) - 1):
         start = [points[2 * i], points[2 * i + 1]]
