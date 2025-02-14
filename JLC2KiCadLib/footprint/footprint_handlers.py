@@ -220,7 +220,11 @@ def h_ARC(data, kicad_mod, footprint_info):
 
     try:
 
-        svg_path = data[2]
+        # "S$xx" is sometimes inserted at index 2 ?
+        if "$" in data[2]:
+            svg_path = data[3]
+        else:
+            svg_path = data[2]
 
         # Regular expression to match ARC pattern
         # coordinates can sometime be separated by a "," instead of a space, therefore we match it using [\s,*?]
