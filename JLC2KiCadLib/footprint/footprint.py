@@ -117,7 +117,7 @@ def create_footprint(
     kicad_mod.append(
         Text(
             type="user",
-            text="REF**",
+            text="${REFERENCE}",
             at=[
                 (footprint_info.min_X + footprint_info.max_X) / 2,
                 footprint_info.max_Y + 4,
