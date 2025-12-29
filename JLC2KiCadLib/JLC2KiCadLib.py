@@ -1,10 +1,11 @@
-import requests
+import argparse
 import json
 import logging
-import argparse
 
-from .__version__ import __version__
+import requests
+
 from . import helper
+from .__version__ import __version__
 from .footprint.footprint import create_footprint, get_footprint_info
 from .symbol.symbol import create_symbol
 

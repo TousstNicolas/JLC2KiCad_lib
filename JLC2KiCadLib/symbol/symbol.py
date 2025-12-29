@@ -1,13 +1,13 @@
-import requests
 import json
-import re
-import os
 import logging
+import os
+import re
 
-from .symbol_handlers import *
+import requests
 
+from .symbol_handlers import handlers
 
-template_lib_header = f"""\
+template_lib_header = """\
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
@@ -193,7 +193,7 @@ def update_library(
     with open(
         f"{output_dir}/{symbol_path}/{library_name}.kicad_sym", "rb+"
     ) as lib_file:
-        pattern = f'  \(symbol "{component_title}" (\n|.)*?\n  \)'
+        pattern = rf'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 
         if f'symbol "{component_title}"' in file_content:

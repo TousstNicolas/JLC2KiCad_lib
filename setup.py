@@ -1,11 +1,12 @@
-import sys
 import os
+import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 from JLC2KiCadLib.__version__ import __version__
 
-long_description = open(os.path.join(sys.path[0], "README.md")).read()
+with open(os.path.join(sys.path[0], "README.md")) as f:
+    long_description = f.read()
 
 setup(
     name="JLC2KiCadLib",

@@ -1,10 +1,27 @@
-import requests
 import json
 import logging
 import os
+from dataclasses import dataclass
 
-from KicadModTree import *
-from .footprint_handlers import *
+import requests
+from KicadModTree import Footprint, KicadFileHandler, Pad, Text, Translation
+
+from .footprint_handlers import handlers, mil2mm
+
+
+@dataclass
+class FootprintInfo:
+    max_X: float = -10000
+    max_Y: float = -10000
+    min_X: float = 10000
+    min_Y: float = 10000
+    footprint_name: str = ""
+    output_dir: str = ""
+    footprint_lib: str = ""
+    model_base_variable: str = ""
+    model_dir: str = ""
+    origin: tuple = (0, 0)
+    models: str = ""
 
 
 def create_footprint(
@@ -26,45 +43,18 @@ def create_footprint(
         translation,
     ) = get_footprint_info(footprint_component_uuid)
 
-    if skip_existing:
-        # check if footprint already exists:
-        if os.path.isfile(
-            os.path.join(output_dir, footprint_lib, footprint_name + ".kicad_mod")
-        ):
-            logging.info(f"Footprint {footprint_name} already exists, skipping.")
-            return f"{footprint_lib}:{footprint_name}", datasheet_link
+    if skip_existing and os.path.isfile(
+        os.path.join(output_dir, footprint_lib, footprint_name + ".kicad_mod")
+    ):
+        logging.info(f"Footprint {footprint_name} already exists, skipping.")
+        return f"{footprint_lib}:{footprint_name}", datasheet_link
 
     # init kicad footprint
     kicad_mod = Footprint(f'"{footprint_name}"')
     kicad_mod.setDescription(f"{footprint_name} footprint")  # TODO Set real description
     kicad_mod.setTags(f"{footprint_name} footprint {component_id}")
 
-    class footprint_info:
-        def __init__(
-            self,
-            footprint_name,
-            output_dir,
-            footprint_lib,
-            model_base_variable,
-            model_dir,
-            origin,
-            models,
-        ):
-            self.max_X, self.max_Y, self.min_X, self.min_Y = (
-                -10000,
-                -10000,
-                10000,
-                10000,
-            )  # I will be using these to calculate the bounding box because the node.calculateBoundingBox() method does not seems to work for me
-            self.footprint_name = footprint_name
-            self.output_dir = output_dir
-            self.footprint_lib = footprint_lib
-            self.model_base_variable = model_base_variable
-            self.model_dir = model_dir
-            self.origin = origin
-            self.models = models
-
-    footprint_info = footprint_info(
+    footprint_info = FootprintInfo(
         footprint_name=footprint_name,
         output_dir=output_dir,
         footprint_lib=footprint_lib,
@@ -161,14 +151,14 @@ def get_footprint_info(footprint_component_uuid):
         logging.error(
             f"create_footprint error. Requests returned with error code {response.status_code}"
         )
-        return ()
+        return ("", None, "", (0, 0))
 
     footprint_shape = data["result"]["dataStr"]["shape"]
     x = data["result"]["dataStr"]["head"]["x"]
     y = data["result"]["dataStr"]["head"]["y"]
     try:
         datasheet_link = data["result"]["dataStr"]["head"]["c_para"]["link"]
-    except:
+    except KeyError:
         datasheet_link = ""
         logging.warning("Could not retrieve datasheet link from EASYEDA")
 
@@ -177,7 +167,7 @@ def get_footprint_info(footprint_component_uuid):
         .replace(" ", "_")
         .replace("/", "_")
         .replace("(", "_")
-        .replace("(", "_")
+        .replace(")", "_")
     )
 
     if not footprint_name:

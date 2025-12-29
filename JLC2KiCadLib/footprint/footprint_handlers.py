@@ -1,20 +1,21 @@
 import json
 import logging
-from math import pow, acos, pi, sqrt
 import re
+from math import acos, pi, pow, sqrt
 
 from KicadModTree import (
+    Arc,
+    Circle,
     Line,
     Pad,
     Polygon,
-    Vector2D,
-    Arc,
-    Circle,
     RectFill,
-    Text,
     RectLine,
+    Text,
+    Vector2D,
 )
-from .model3d import get_WrlModel, get_StepModel
+
+from .model3d import get_StepModel, get_WrlModel
 
 __all__ = [
     "handlers",
@@ -53,7 +54,6 @@ def mil2mm(data):
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
-
     width = mil2mm(data[0])
 
     # "S$xx" is sometimes inserted at index 2 ?
@@ -150,8 +150,8 @@ def h_PAD(data, kicad_mod, footprint_info):
 
         if drill_offset == 0:
             drill_size = drill_diameter
-        elif (drill_diameter < drill_offset) ^ (
-            size[0] > size[1]
+        elif (
+            (drill_diameter < drill_offset) ^ (size[0] > size[1])
         ):  # invert the orientation of the drill hole if not in the same orientation as the pad shape
             drill_size = [drill_diameter, drill_offset]
         else:
@@ -173,13 +173,10 @@ def h_PAD(data, kicad_mod, footprint_info):
         points = []
         for i, coord in enumerate(data[8].split(" ")):
             points.append(mil2mm(coord) - at[i % 2])
-        primitives = [Polygon(nodes=zip(points[::2], points[1::2]))]
+        primitives = [Polygon(nodes=zip(points[::2], points[1::2], strict=True))]
         size = [0.1, 0.1]
 
-        if drill_offset == 0:  # Check if the hole is oval
-            drill_size = 1
-        else:
-            drill_size = [drill_diameter, drill_offset]
+        drill_size = 1 if drill_offset == 0 else [drill_diameter, drill_offset]  # Use ternary operator for compactness
 
     else:
         logging.error(
@@ -215,12 +212,8 @@ def h_ARC(data, kicad_mod, footprint_info):
     # pylint: disable=unused-argument
 
     try:
-
         # "S$xx" is sometimes inserted at index 2 ?
-        if "$" in data[2]:
-            svg_path = data[3]
-        else:
-            svg_path = data[2]
+        svg_path = data[3] if "$" in data[2] else data[2]
 
         # Regular expression to match ARC pattern
         # coordinates can sometime be separated by a "," instead of a space, therefore we match it using [\s,*?]
@@ -266,10 +259,7 @@ def h_ARC(data, kicad_mod, footprint_info):
             length_squared = 0
             large_arc_flag = 1
 
-        if large_arc_flag == 1:
-            vec2 = vec1.rotate(-90)
-        else:
-            vec2 = vec1.rotate(90)
+        vec2 = vec1.rotate(-90) if large_arc_flag == 1 else vec1.rotate(90)
 
         magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
         vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)

@@ -174,7 +174,7 @@ def h_PL(data, translation, kicad_symbol):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {mil2mm(float(pathString[2*i]) - translation[0])} {- mil2mm(float(pathString[2*i+1]) - translation[-1])})"
+                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} {-mil2mm(float(pathString[2 * i + 1]) - translation[-1])})"
             )
         polystr = "\n          ".join(polypts)
 
@@ -200,7 +200,7 @@ def h_PG(data, translation, kicad_symbol):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {mil2mm(float(pathString[2*i]) - translation[0])} {- mil2mm(float(pathString[2*i+1]) - translation[1])})"
+                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} {-mil2mm(float(pathString[2 * i + 1]) - translation[1])})"
             )
         polypts.append(polypts[0])
         polystr = "\n          ".join(polypts)
@@ -234,10 +234,11 @@ def h_A(data, translation, kicad_symbol):
     Arc handler
     """
 
-    from math import sqrt, acos, pi, sin, cos
+    from math import acos, cos, pi, sin, sqrt
 
+    # ruff: disable [E741]
+    # Funciton reversed from https://easyeda.com/editor/6.5.5/js/editorPCB.min.js
     def getCenterParam(match):
-        # Funciton reversed from https://easyeda.com/editor/6.5.5/js/editorPCB.min.js
         e = float([i for i in re.split(r" |,", match[0][1]) if i][0])
         t = float([i for i in re.split(r" |,", match[0][1]) if i][1])
         s = float([i for i in re.split(r" |,", match[1][1]) if i][0])
@@ -300,6 +301,8 @@ def h_A(data, translation, kicad_symbol):
         if r != 0:
             m -= f
         return (u, g, h, m)
+
+    # ruff: enable [E741]
 
     try:
         match = re.findall(r"([MA])([eE ,\-\+.\d]+)", data[0])

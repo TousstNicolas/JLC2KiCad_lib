@@ -1,7 +1,8 @@
-import requests
 import logging
 import os
 import re
+
+import requests
 from KicadModTree import Model
 
 wrl_header = """#VRML V2.0 utf8
@@ -23,7 +24,7 @@ def get_StepModel(
     translationZ,
     rotation,
 ):
-    logging.info(f"Downloading STEP Model ...")
+    logging.info("Downloading STEP Model ...")
 
     # `qAxj6KHrDKw4blvCG8QJPs7Y` is a constant in
     # https://modules.lceda.cn/smt-gl-engine/0.8.22.6032922c/smt-gl-engine.js
@@ -33,7 +34,7 @@ def get_StepModel(
         f"https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{component_uuid}"
     )
 
-    if not response.status_code == requests.codes.ok:
+    if response.status_code != requests.codes.ok:
         logging.error("request error, no Step model found")
         return
 
@@ -151,10 +152,10 @@ def get_WrlModel(
 Shape{{
 	appearance Appearance {{
 		material  Material 	{{ 
-			diffuseColor {' '.join(material['diffuseColor'])} 
-			specularColor {' '.join(material['specularColor'])}
+			diffuseColor {" ".join(material["diffuseColor"])} 
+			specularColor {" ".join(material["specularColor"])}
 			ambientIntensity 0.2
-			transparency {material['transparency']}
+			transparency {material["transparency"]}
 			shininess 0.5
 		}}
 	}}
@@ -194,9 +195,9 @@ Shape{{
 
     # Check if a model has already been added to the footprint to prevent duplicates
     if any(isinstance(child, Model) for child in kicad_mod.getAllChilds()):
-        logging.info(f"WRL model created at {filename}")
+        logging.info("WRL model created at {filename}")
         logging.info(
-            f"WRL model was not added to the footprint to prevent duplicates with STEP model"
+            "WRL model was not added to the footprint to prevent duplicates with STEP model"
         )
     else:
         kicad_mod.append(
