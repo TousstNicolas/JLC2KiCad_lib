@@ -5,13 +5,14 @@
 [![PyPI version](https://badge.fury.io/py/JLC2KiCadLib.svg)](https://badge.fury.io/py/JLC2KiCadLib)
 ![Python versions](https://img.shields.io/pypi/pyversions/JLC2KiCadLib.svg)
 [![Downloads](https://pepy.tech/badge/jlc2kicadlib)](https://pepy.tech/project/jlc2kicadlib)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: ruff](https://img.shields.io/badge/Linter-Ruff-D7FF64?style=flat-square&logo=ruff)](https://github.com/astral-sh/ruff)
+[![Code style: ruff](https://img.shields.io/badge/Formatter-Ruff-D7FF64?style=flat-square&logo=ruff)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </p>
 
 JLC2KiCadLib is a python script that generate a component library (symbol, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library.
-This script requires **Python 3.6** or higher.
+This script requires **Python 3.8** or higher.
 
 ## Example 
 

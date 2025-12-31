@@ -1,11 +1,14 @@
 import argparse
 import json
 import logging
+from importlib.metadata import version as pkg_version
 
 import requests
 
 from . import helper
-from .__version__ import __version__
+
+__version__ = pkg_version("JLC2KiCadLib")
+
 from .footprint.footprint import create_footprint, get_footprint_info
 from .symbol.symbol import create_symbol
 
