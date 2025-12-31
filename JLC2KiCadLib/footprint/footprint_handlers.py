@@ -121,7 +121,7 @@ def h_PAD(data, kicad_mod, footprint_info):
     drill_size = drill_diameter
 
     # Some shape do not have coordinates, insert empty data to realign later index
-    if shape_type in ["ELLIPSE"]:
+    if shape_type == "ELLIPSE" or (shape_type == "OVAL" and layer != MULTILAYER) :
         data.insert(8, "")
 
     rotation = float(data[9])
