@@ -121,7 +121,7 @@ def h_PAD(data, kicad_mod, footprint_info):
     drill_size = drill_diameter
 
     # Some shape do not have coordinates, insert empty data to realign later index
-    if shape_type == "ELLIPSE" or (shape_type == "OVAL" and layer != MULTILAYER) :
+    if shape_type == "ELLIPSE" or (shape_type == "OVAL" and layer != MULTILAYER):
         data.insert(8, "")
 
     rotation = float(data[9])
@@ -140,7 +140,8 @@ def h_PAD(data, kicad_mod, footprint_info):
         pad_layer = ["B.Cu", "B.Mask", "B.Paste"]
     else:
         logging.warning(
-            f"footprint, h_PAD: Unrecognized pad layer. Using default SMT layer for pad {pad_number}"
+            f"footprint, h_PAD: Unrecognized pad layer. Using default SMT layer for "
+            f"pad {pad_number}"
         )
         pad_type = Pad.TYPE_SMT
         pad_layer = Pad.LAYERS_SMT
@@ -150,9 +151,10 @@ def h_PAD(data, kicad_mod, footprint_info):
 
         if drill_offset == 0:
             drill_size = drill_diameter
-        elif (
-            (drill_diameter < drill_offset) ^ (size[0] > size[1])
-        ):  # invert the orientation of the drill hole if not in the same orientation as the pad shape
+        elif (drill_diameter < drill_offset) ^ (
+            size[0] > size[1]
+        ):  # invert the orientation of the drill hole if not in the same orientation
+            # as the pad shape
             drill_size = [drill_diameter, drill_offset]
         else:
             drill_size = [drill_offset, drill_diameter]
@@ -176,11 +178,12 @@ def h_PAD(data, kicad_mod, footprint_info):
         primitives = [Polygon(nodes=zip(points[::2], points[1::2], strict=True))]
         size = [0.1, 0.1]
 
-        drill_size = 1 if drill_offset == 0 else [drill_diameter, drill_offset]  # Use ternary operator for compactness
+        drill_size = 1 if drill_offset == 0 else [drill_diameter, drill_offset]
 
     else:
         logging.error(
-            f"footprint handler, pad : no correspondance found, using default SHAPE_OVAL for pad {pad_number}"
+            f"footprint handler, pad : no correspondance found, using default "
+            f"SHAPE_OVAL for pad {pad_number}"
         )
         shape = Pad.SHAPE_OVAL
 
@@ -209,15 +212,18 @@ def h_ARC(data, kicad_mod, footprint_info):
     """
     append an Arc to the footprint
     """
-    # pylint: disable=unused-argument
 
     try:
         # "S$xx" is sometimes inserted at index 2 ?
         svg_path = data[3] if "$" in data[2] else data[2]
 
         # Regular expression to match ARC pattern
-        # coordinates can sometime be separated by a "," instead of a space, therefore we match it using [\s,*?]
-        pattern = r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
+        # coordinates can sometime be separated by a "," instead of a space,
+        # therefore we match it using [\s,*?]
+        pattern = (
+            r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]"
+            r"([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
+        )
 
         match = re.search(pattern, svg_path)
 
@@ -290,7 +296,8 @@ def h_ARC(data, kicad_mod, footprint_info):
             layer = layer_correspondance[data[1]]
         except KeyError:
             logging.warning(
-                "footprint handler, h_ARC : layer correspondance not found. Adding arc on default F.Silks layer"
+                "footprint handler, h_ARC : layer correspondance not found. "
+                "Adding arc on default F.Silks layer"
             )
             layer = "F.SilkS"
 
@@ -310,7 +317,8 @@ def h_CIRCLE(data, kicad_mod, footprint_info):
 
     if (
         data[4] == "100"
-    ):  # they want to draw a circle on pads, we don't want that. This is an empirical deduction, no idea if this is correct, but it seems to work on my tests
+    ):  # they want to draw a circle on pads, we don't want that. This is an empirical
+        # deduction, no idea if this is correct, but it seems to work on my tests
         return ()
 
     data[0] = mil2mm(data[0])
@@ -339,13 +347,17 @@ def h_SOLIDREGION(data, kicad_mod, footprint_info):
         if data[2] == "npth":
             if (
                 "A" in data[1]
-            ):  # A is present for when arcs are in the shape, help is needed to parse and format these
+            ):  # A is present for when arcs are in the shape, help is needed to parse
+                # and format these
                 logging.warning(
-                    "footprint handler : h_SOLIDREGION, Edge.Cuts shape not handled, see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/41 for more informations"
+                    "footprint handler : h_SOLIDREGION, Edge.Cuts shape not handled, "
+                    "see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/41 for "
+                    "more informations"
                 )
                 return
 
-            # use regular expression to find all the numeric values in the string that come after "M" or "L" (other shapes are not yet handled)
+            # use regular expression to find all the numeric values in the string that
+            # come after "M" or "L" (other shapes are not yet handled)
             matches = re.findall(
                 r"(?:M|L)\s+([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)", data[1]
             )
@@ -396,7 +408,8 @@ def h_SVGNODE(data, kicad_mod, footprint_info):
 
 def h_VIA(data, kicad_mod, footprint_info):
     logging.warning(
-        "VIA not supported. Via are often added for better heat dissipation. Be careful and read datasheet if needed."
+        "VIA not supported. Via are often added for better heat dissipation. "
+        "Be careful and read datasheet if needed."
     )
 
 

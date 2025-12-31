@@ -102,7 +102,8 @@ def h_P(data, translation, kicad_symbol):
     else:
         rotation = 0
         logging.warning(
-            f'symbol : pin number {pinNumber} : "{pinName}" failed to find orientation. Using Default orientation'
+            f'symbol : pin number {pinNumber} : "{pinName}" failed to find orientation.'
+            "Using Default orientation"
         )
 
     if rotation == 0 or rotation == 180:
@@ -112,7 +113,8 @@ def h_P(data, translation, kicad_symbol):
     else:
         length = 2.54
         logging.warning(
-            f'symbol : pin number {pinNumber} : "{pinName}" failed to find length. Using Default length'
+            f'symbol : pin number {pinNumber} : "{pinName}" failed to find length.'
+            "Using Default length"
         )
 
     try:
@@ -174,7 +176,8 @@ def h_PL(data, translation, kicad_symbol):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} {-mil2mm(float(pathString[2 * i + 1]) - translation[-1])})"
+                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} "
+                f"{-mil2mm(float(pathString[2 * i + 1]) - translation[-1])})"
             )
         polystr = "\n          ".join(polypts)
 
@@ -200,7 +203,8 @@ def h_PG(data, translation, kicad_symbol):
         polypts = []
         for i, _ in enumerate(pathString[::2]):
             polypts.append(
-                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} {-mil2mm(float(pathString[2 * i + 1]) - translation[1])})"
+                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} "
+                f"{-mil2mm(float(pathString[2 * i + 1]) - translation[1])})"
             )
         polypts.append(polypts[0])
         polystr = "\n          ".join(polypts)
@@ -237,7 +241,7 @@ def h_A(data, translation, kicad_symbol):
     from math import acos, cos, pi, sin, sqrt
 
     # ruff: disable [E741]
-    # Funciton reversed from https://easyeda.com/editor/6.5.5/js/editorPCB.min.js
+    # Function reversed from https://easyeda.com/editor/6.5.5/js/editorPCB.min.js
     def getCenterParam(match):
         e = float([i for i in re.split(r" |,", match[0][1]) if i][0])
         t = float([i for i in re.split(r" |,", match[0][1]) if i][1])

@@ -110,7 +110,7 @@ def create_footprint(
             text="${REFERENCE}",
             at=[
                 (footprint_info.min_X + footprint_info.max_X) / 2,
-                 (footprint_info.min_Y + footprint_info.max_Y) / 2,
+                (footprint_info.min_Y + footprint_info.max_Y) / 2,
             ],
             layer="F.Fab",
         )
@@ -149,7 +149,8 @@ def get_footprint_info(footprint_component_uuid):
         data = json.loads(response.content.decode())
     else:
         logging.error(
-            f"create_footprint error. Requests returned with error code {response.status_code}"
+            "create_footprint error. Requests returned with error code "
+            f"{response.status_code}"
         )
         return ("", None, "", (0, 0))
 
@@ -173,7 +174,8 @@ def get_footprint_info(footprint_component_uuid):
     if not footprint_name:
         footprint_name = "NoName"
         logging.warning(
-            "Could not retrieve components information from EASYEDA, default name 'NoName'."
+            "Could not retrieve components information from EASYEDA, default name "
+            "'NoName'."
         )
 
     return (footprint_name, datasheet_link, footprint_shape, (x, y))

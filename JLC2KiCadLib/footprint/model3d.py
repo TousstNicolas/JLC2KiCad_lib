@@ -39,7 +39,12 @@ def get_StepModel(
         return
 
     ensure_footprint_lib_directories_exist(footprint_info)
-    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
+    filename = (
+        f"{footprint_info.output_dir}/"
+        f"{footprint_info.footprint_lib}/"
+        f"{footprint_info.model_dir}/"
+        f"{footprint_info.footprint_name}.step"
+    )
     with open(filename, "wb") as f:
         f.write(response.content)
 
@@ -47,9 +52,17 @@ def get_StepModel(
 
     if footprint_info.model_base_variable:
         if footprint_info.model_base_variable.startswith("$"):
-            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"'
+            path_name = (
+                f'"{footprint_info.model_base_variable}/'
+                f"{footprint_info.model_dir}/"
+                f'{footprint_info.footprint_name}.step"'
+            )
         else:
-            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.model_dir}/{footprint_info.footprint_name}.step"'
+            path_name = (
+                f'"$({footprint_info.model_base_variable})/'
+                f"{footprint_info.model_dir}/"
+                f'{footprint_info.footprint_name}.step"'
+            )
     else:
         path_name = f"{footprint_info.model_dir}/{footprint_info.footprint_name}.step"
 
@@ -177,15 +190,28 @@ Shape{{
 
     ensure_footprint_lib_directories_exist(footprint_info)
 
-    filename = f"{footprint_info.output_dir}/{footprint_info.footprint_lib}/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
+    filename = (
+        f"{footprint_info.output_dir}/"
+        f"{footprint_info.footprint_lib}/"
+        f"{footprint_info.model_dir}/"
+        f"{footprint_info.footprint_name}.wrl"
+    )
     with open(filename, "w") as f:
         f.write(wrl_content)
 
     if footprint_info.model_base_variable:
         if footprint_info.model_base_variable.startswith("$"):
-            path_name = f'"{footprint_info.model_base_variable}/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"'
+            path_name = (
+                f'"{footprint_info.model_base_variable}/'
+                f"{footprint_info.model_dir}/"
+                f'{footprint_info.footprint_name}.wrl"'
+            )
         else:
-            path_name = f'"$({footprint_info.model_base_variable})/{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"'
+            path_name = (
+                f'"$({footprint_info.model_base_variable})/'
+                f"{footprint_info.model_dir}/"
+                f'{footprint_info.footprint_name}.wrl"'
+            )
     else:
         path_name = f"{footprint_info.model_dir}/{footprint_info.footprint_name}.wrl"
 
@@ -197,7 +223,8 @@ Shape{{
     if any(isinstance(child, Model) for child in kicad_mod.getAllChilds()):
         logging.info("WRL model created at {filename}")
         logging.info(
-            "WRL model was not added to the footprint to prevent duplicates with STEP model"
+            "WRL model was not added to the footprint to prevent duplicates with STEP "
+            "model"
         )
     else:
         kicad_mod.append(

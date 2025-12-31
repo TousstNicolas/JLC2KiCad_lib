@@ -20,7 +20,9 @@ def add_component(component_id, args):
 
     if not data["success"]:
         logging.error(
-            f"failed to get component uuid for {component_id}\nThe component # is probably wrong. Check a possible typo and that the component exists on easyEDA"
+            f"failed to get component uuid for {component_id}\n"
+            "The component # is probably wrong. Check a possible typo and that the "
+            "component exists on easyEDA"
         )
         return ()
 
@@ -59,8 +61,14 @@ def add_component(component_id, args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="take a JLCPCB part # and create the according component's kicad's library",
-        epilog="example use : \n	JLC2KiCadLib C1337258 C24112 -dir My_lib -symbol_lib My_Symbol_lib --no_footprint",
+        description=(
+            "take a JLCPCB part # and create the according component'skicad's library"
+        ),
+        epilog=(
+            "example use : \n"
+            "     JLC2KiCadLib C1337258 C24112 -dir My_lib "
+            "-symbol_lib My_Symbol_lib --no_footprint"
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -125,7 +133,13 @@ def main():
         choices=["STEP", "WRL"],
         type=str,
         default="STEP",
-        help="Select the 3D model you want to use. Default is STEP. If both are selected, only the STEP model will be added to the footprint (the WRL model will still be generated alongside the STEP model). If you do not want any model to be generated, use the --models without arguments",
+        help=(
+            "Select the 3D model you want to use. Default is STEP. "
+            "If both are selected, only the STEP model will be added to the footprint "
+            "(the WRL model will still be generated alongside the STEP model). "
+            "If you do not want any model to be generated, use the --models "
+            "without arguments"
+        ),
     )
 
     parser.add_argument(
@@ -133,14 +147,20 @@ def main():
         dest="model_dir",
         type=str,
         default="packages3d",
-        help='Set directory for storing 3d models, default is "packages3d" (relative to FOOTPRINT_LIB)',
+        help=(
+            'Set directory for storing 3d models, default is "packages3d" '
+            "(relative to FOOTPRINT_LIB)"
+        ),
     )
 
     parser.add_argument(  # argument to skip already existing files and symbols
         "--skip_existing",
         dest="skip_existing",
         action="store_true",
-        help="Use --skip_existing if you want do not want to replace already existing footprints and symbols",
+        help=(
+            "Use --skip_existing if you want do not want to replace already existing "
+            "footprints and symbols"
+        ),
     )
 
     parser.add_argument(
@@ -148,7 +168,11 @@ def main():
         dest="model_base_variable",
         type=str,
         default="",
-        help="Use -model_base_variable if you want to specify the base path of the 3D model using a path variable. If the specified variable starts with '$' it is used 'as-is', otherwise it is encapsulated: $(MODEL_BASE_VARIABLE)",
+        help=(
+            "Use -model_base_variable if you want to specify the base path of the 3D "
+            "model using a path variable. If the specified variable starts with '$' it "
+            "is used 'as-is', otherwise it is encapsulated: $(MODEL_BASE_VARIABLE)"
+        ),
     )
 
     parser.add_argument(
@@ -157,7 +181,10 @@ def main():
         type=str,
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set logging level. If DEBUG is used, the debug logs are only written in the log file if the option  --log_file is set ",
+        help=(
+            "Set logging level. If DEBUG is used, the debug logs are only written in "
+            "the log file if the option  --log_file is set "
+        ),
     )
 
     parser.add_argument(
