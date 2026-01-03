@@ -54,13 +54,21 @@ def mil2mm(data):
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
+    """
+    Append a line to the footprint
+
+    data : [
+        0 : width
+        1 : layer
+        2 :
+        3 : points list
+        4 : id
+    ]
+    """
+
     width = mil2mm(data[0])
 
-    # "S$xx" is sometimes inserted at index 2 ?
-    if "$" in data[2]:
-        points = [mil2mm(p) for p in data[3].split(" ") if p]
-    else:
-        points = [mil2mm(p) for p in data[2].split(" ") if p]
+    points = [mil2mm(p) for p in data[3].split(" ") if p]
 
     for i in range(int(len(points) / 2) - 1):
         start = [points[2 * i], points[2 * i + 1]]
@@ -86,24 +94,25 @@ def h_PAD(data, kicad_mod, footprint_info):
     Append a pad to the footprint
 
     data : [
-        0 : shape type
-        1 : pad position x
-        2 : pad position y
-        3 : pad size x
-        4 : pad size y
-        5 : layer
-        6 : pad number
-        7 : drill size
-        8 : Polygon nodes "skipped for some shapes"
-        9 : rotation
-        10 :
-        11 : drill offset
-        12 :
+        0  : shape type
+        1  : pad position x
+        2  : pad position y
+        3  : pad size x
+        4  : pad size y
+        5  : layer
+        6  :
+        7  : pad number
+        8  : drill size
+        9  : Polygon nodes
+        10 : rotation
+        11 : id
+        12 : drill offset
         13 :
-        14 :
+        14 : plated
         15 :
         16 :
-        17 : ? position
+        17 :
+        18 :
     ]
     """
 
@@ -117,15 +126,12 @@ def h_PAD(data, kicad_mod, footprint_info):
     size = [mil2mm(data[3]), mil2mm(data[4])]
     layer = data[5]
     pad_number = data[6]
-    drill_diameter = float(mil2mm(data[7])) * 2
+
+    drill_diameter = float(mil2mm(data[8])) * 2
     drill_size = drill_diameter
 
-    # Some shape do not have coordinates, insert empty data to realign later index
-    if shape_type == "ELLIPSE" or (shape_type == "OVAL" and layer != MULTILAYER):
-        data.insert(8, "")
-
-    rotation = float(data[9])
-    drill_offset = float(mil2mm(data[11]))
+    rotation = float(data[10])
+    drill_offset = float(mil2mm(data[12])) if data[12] else 0
 
     primitives = ""
 
@@ -146,11 +152,12 @@ def h_PAD(data, kicad_mod, footprint_info):
         pad_type = Pad.TYPE_SMT
         pad_layer = Pad.LAYERS_SMT
 
-    if data[0] == "OVAL":
+    if shape_type == "OVAL":
         shape = Pad.SHAPE_OVAL
 
         if drill_offset == 0:
             drill_size = drill_diameter
+
         elif (drill_diameter < drill_offset) ^ (
             size[0] > size[1]
         ):  # invert the orientation of the drill hole if not in the same orientation
@@ -159,7 +166,7 @@ def h_PAD(data, kicad_mod, footprint_info):
         else:
             drill_size = [drill_offset, drill_diameter]
 
-    elif data[0] == "RECT":
+    elif shape_type == "RECT":
         shape = Pad.SHAPE_RECT
 
         if drill_offset == 0:
@@ -167,13 +174,13 @@ def h_PAD(data, kicad_mod, footprint_info):
         else:
             drill_size = [drill_diameter, drill_offset]
 
-    elif data[0] == "ELLIPSE":
+    elif shape_type == "ELLIPSE":
         shape = Pad.SHAPE_CIRCLE
 
-    elif data[0] == "POLYGON":
+    elif shape_type == "POLYGON":
         shape = Pad.SHAPE_CUSTOM
         points = []
-        for i, coord in enumerate(data[8].split(" ")):
+        for i, coord in enumerate(data[9].split(" ")):
             points.append(mil2mm(coord) - at[i % 2])
         primitives = [Polygon(nodes=zip(points[::2], points[1::2], strict=True))]
         size = [0.1, 0.1]
@@ -211,105 +218,100 @@ def h_PAD(data, kicad_mod, footprint_info):
 def h_ARC(data, kicad_mod, footprint_info):
     """
     append an Arc to the footprint
+    data : [
+        0  : width
+        1  : layer
+        2  :
+        3  : nodes
+        4  :
+        5  : id
+    ]
     """
 
-    try:
-        # "S$xx" is sometimes inserted at index 2 ?
-        svg_path = data[3] if "$" in data[2] else data[2]
+    width = data[0]
+    layer = layer_correspondance[data[1]]
+    svg_path = data[3]
 
-        # Regular expression to match ARC pattern
-        # coordinates can sometime be separated by a "," instead of a space,
-        # therefore we match it using [\s,*?]
-        pattern = (
-            r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]"
-            r"([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
-        )
+    # Regular expression to match ARC pattern
+    # coordinates can sometime be separated by a "," instead of a space,
+    # therefore we match it using [\s,*?]
+    pattern = (
+        r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]"
+        r"([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
+    )
 
-        match = re.search(pattern, svg_path)
+    match = re.search(pattern, svg_path)
 
-        if not match:
-            logging.error("footprint handler, h_ARC: Failed to parse ARC")
-            return
+    if not match:
+        logging.error("footprint handler, h_ARC: failed to parse ARC")
+        return
 
-        # Extract values
-        start_x, start_y = float(match.group(1)), float(match.group(2))
-        rx, ry = float(match.group(3)), float(match.group(4))
-        _ = float(match.group(5))  # rotation ?
-        large_arc_flag = int(match.group(6))
-        sweep_flag = int(match.group(7))
-        end_x, end_y = float(match.group(8)), float(match.group(9))
+    # Extract values
+    start_x, start_y = float(match.group(1)), float(match.group(2))
+    rx, ry = float(match.group(3)), float(match.group(4))
+    _ = float(match.group(5))  # rotation ?
+    large_arc_flag = int(match.group(6))
+    sweep_flag = int(match.group(7))
+    end_x, end_y = float(match.group(8)), float(match.group(9))
 
-        width = data[0]
+    width = mil2mm(width)
+    start_x = mil2mm(start_x)
+    start_y = mil2mm(start_y)
+    mid_x = mil2mm(rx)
+    mid_y = mil2mm(ry)
+    end_x = mil2mm(end_x)
+    end_y = mil2mm(end_y)
 
-        width = mil2mm(width)
-        start_x = mil2mm(start_x)
-        start_y = mil2mm(start_y)
-        mid_x = mil2mm(rx)
-        mid_y = mil2mm(ry)
-        end_x = mil2mm(end_x)
-        end_y = mil2mm(end_y)
+    start = [start_x, start_y]
+    end = [end_x, end_y]
+    if sweep_flag == 0:
+        start, end = end, start
 
-        start = [start_x, start_y]
-        end = [end_x, end_y]
-        if sweep_flag == 0:
-            start, end = end, start
+    # find the midpoint of start and end
+    mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+    # create vector from start to mid:
+    vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
+    if vec1 == Vector2D(0, 0):
+        logging.error("footprint handler, h_ARC: failed to create arc")
+        return
 
-        # find the midpoint of start and end
-        mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
-        # create vector from start to mid:
-        vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
+    # create vector that's normal to vec1:
+    length_squared = mid_x * mid_y - pow(vec1.distance_to((0, 0)), 2)
+    if length_squared < 0:
+        length_squared = 0
+        large_arc_flag = 1
 
-        # create vector that's normal to vec1:
-        length_squared = mid_x * mid_y - pow(vec1.distance_to((0, 0)), 2)
-        if length_squared < 0:
-            length_squared = 0
-            large_arc_flag = 1
+    vec2 = vec1.rotate(-90) if large_arc_flag == 1 else vec1.rotate(90)
 
-        vec2 = vec1.rotate(-90) if large_arc_flag == 1 else vec1.rotate(90)
+    magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+    vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
 
-        magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
-        vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
+    # calculate the lenght from mid to centre using pythagoras:
+    length = sqrt(length_squared)
+    # calculate the centre using mid and vec2 with the correct length:
+    cen = Vector2D(mid) + vec2 * length
 
-        # calculate the lenght from mid to centre using pythagoras:
-        length = sqrt(length_squared)
-        # calculate the centre using mid and vec2 with the correct length:
-        cen = Vector2D(mid) + vec2 * length
+    cen_start = cen - start
+    cen_end = cen - end
 
-        cen_start = cen - start
-        cen_end = cen - end
-
-        # calculate angle between cen_start and cen_end
-        dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
-        angle = (
-            acos(
-                round(
-                    dot_product
-                    / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0))),
-                    4,
-                )
+    # calculate angle between cen_start and cen_end
+    dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
+    angle = (
+        acos(
+            round(
+                dot_product
+                / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0))),
+                4,
             )
-            * 180
-            / pi
         )
+        * 180
+        / pi
+    )
 
-        try:
-            layer = layer_correspondance[data[1]]
-        except KeyError:
-            logging.warning(
-                "footprint handler, h_ARC : layer correspondance not found. "
-                "Adding arc on default F.Silks layer"
-            )
-            layer = "F.SilkS"
+    if large_arc_flag == 1:
+        angle = 360 - angle
 
-        if large_arc_flag == 1:
-            angle = 360 - angle
-
-        kicad_mod.append(
-            Arc(start=start, end=end, width=width, center=cen, layer=layer)
-        )
-
-    except Exception:
-        logging.exception("footprint handler, h_ARC: failed to add ARC")
+    kicad_mod.append(Arc(start=start, end=end, width=width, center=cen, layer=layer))
 
 
 def h_CIRCLE(data, kicad_mod, footprint_info):
@@ -459,17 +461,14 @@ def h_HOLE(data, kicad_mod, footprint_info):
 
 
 def h_TEXT(data, kicad_mod, footprint_info):
-    try:
-        kicad_mod.append(
-            Text(
-                type="user",
-                at=[mil2mm(data[1]), mil2mm(data[2])],
-                text=data[8],
-                layer="F.SilkS",
-            )
+    kicad_mod.append(
+        Text(
+            type="user",
+            text=data[9],
+            at=[mil2mm(data[1]), mil2mm(data[2])],
+            layer="F.SilkS",
         )
-    except Exception:
-        logging.warning("footprint handler, h_TEXT: failed to add text")
+    )
 
 
 handlers = {

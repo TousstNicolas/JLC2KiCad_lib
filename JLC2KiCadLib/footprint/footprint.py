@@ -66,9 +66,7 @@ def create_footprint(
 
     # for each line in data : use the appropriate handler
     for line in footprint_shape:
-        args = [
-            i for i in line.split("~") if i
-        ]  # split and remove empty string in list
+        args = [i for i in line.split("~")]  # split and remove empty string in list
         model = args[0]
         logging.debug(args)
         if model not in handlers:
