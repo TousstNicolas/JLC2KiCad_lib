@@ -15,35 +15,49 @@ def mil2mm(data):
 def h_R(data, translation, kicad_symbol):
     """
     Rectangle handler
+    data = {
+    0  : x1
+    1  : y1
+    2  :
+    3  :
+    4  : width
+    5  : length
+    6  : stroke color
+    7  : ?
+    8  : stroke style : 0 = solid, 1 = dashed, 2 = dotted
+    9  : fill color
+    10 : id
+    11 : locked
+    }
     """
 
-    try:
-        if len(data) == 12:
-            X1 = float(data[0])
-            Y1 = float(data[1])
-            X2 = float(X1) + float(data[4])
-            Y2 = float(Y1) + float(data[5])
-        else:
-            X1 = float(data[0])
-            Y1 = float(data[1])
-            X2 = float(X1) + float(data[2])
-            Y2 = float(Y1) + float(data[3])
+    x1 = float(data[0])
+    y1 = float(data[1])
+    width = float(data[4])
+    length = float(data[5])
 
-        X1 = mil2mm(X1 - translation[0])
-        Y1 = -mil2mm(Y1 - translation[1])
-        X2 = mil2mm(X2 - translation[0])
-        Y2 = -mil2mm(Y2 - translation[1])
+    x2 = x1 + width
+    y2 = y1 + length
 
-        kicad_symbol.drawing += f"""
+    x1_mm = mil2mm(x1 - translation[0])
+    y1_mm = -mil2mm(y1 - translation[1])
+    x2_mm = mil2mm(x2 - translation[0])
+    y2_mm = -mil2mm(y2 - translation[1])
+
+    if data[8] == 1:
+        stroke_style = "dash"
+    elif data[8] == 2:
+        stroke_style = "dot"
+    else:
+        stroke_style = "default"
+
+    kicad_symbol.drawing += f"""
       (rectangle
-        (start {X1} {Y1})
-        (end {X2} {Y2})
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (start {x1_mm} {y1_mm})
+        (end {x2_mm} {y2_mm})
+        (stroke (width 0) (type {stroke_style}) (color 0 0 0 0))
         (fill (type background))
       )"""
-    except Exception as e:
-        print(e)
-        logging.error("symbol : failed to add a rectangle")
 
 
 def h_E(data, translation, kicad_symbol):
@@ -51,32 +65,51 @@ def h_E(data, translation, kicad_symbol):
     Circle
     """
 
-    try:
-        X1 = mil2mm(float(data[0]) - translation[0])
-        Y1 = -mil2mm(float(data[1]) - translation[1])
-        radius = mil2mm(float(data[2]))
+    x1 = mil2mm(float(data[0]) - translation[0])
+    y1 = -mil2mm(float(data[1]) - translation[1])
+    radius = mil2mm(float(data[2]))
 
-        kicad_symbol.drawing += f"""
+    kicad_symbol.drawing += f"""
       (circle
-        (center {X1} {Y1})
+        (center {x1} {y1})
         (radius {radius})
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type background))
       )"""
-    except Exception as e:
-        print(e)
-        logging.error("symbol : failed to add circle")
 
 
 def h_P(data, translation, kicad_symbol):
     """
     Add Pin to the symbol
+    data = [
+    0  :
+    1  : electrical type
+    2  : pin number
+    3  : x1
+    4  : y1
+    5  : rotation
+    6  : id
+    7  :
+    8  :
+    9  :
+    10 :
+    11 :
+    12 :
+    13 :
+    14 :
+    15 :
+    16 :
+    17 : name size
+    18 :
+    19 :
+    20 :
+    21 :
+    22 :
+    23 :
+    24 : number size
+    25 :
+    ]
     """
-
-    if len(data) == 24:  # sometimes, the rotation parameter is not in the list.
-        data.insert(5, "0")
-    elif len(data) == 28:
-        data.insert(1, "0")
 
     if data[1] == "0":
         electrical_type = "unspecified"
@@ -91,20 +124,13 @@ def h_P(data, translation, kicad_symbol):
     else:
         electrical_type = "unspecified"
 
-    pinNumber = data[2]
-    pinName = data[13]
+    pin_number = data[2]
+    pin_name = data[13]
 
-    X = round(mil2mm(float(data[3]) - translation[0]), 3)
-    Y = round(-mil2mm(float(data[4]) - translation[1]), 3)
+    x1 = round(mil2mm(float(data[3]) - translation[0]), 3)
+    y1 = round(-mil2mm(float(data[4]) - translation[1]), 3)
 
-    if data[5] in ["0", "90", "180", "270"]:
-        rotation = (int(data[5]) + 180) % 360
-    else:
-        rotation = 0
-        logging.warning(
-            f'symbol : pin number {pinNumber} : "{pinName}" failed to find orientation.'
-            "Using Default orientation"
-        )
+    rotation = (int(data[5]) + 180) % 360 if data[5] else 180
 
     if rotation == 0 or rotation == 180:
         length = round(mil2mm(abs(float(data[8].split("h")[-1]))), 3)
@@ -113,57 +139,76 @@ def h_P(data, translation, kicad_symbol):
     else:
         length = 2.54
         logging.warning(
-            f'symbol : pin number {pinNumber} : "{pinName}" failed to find length.'
+            f'symbol : pin number {pin_number} : "{pin_name}" failed to find length.'
             "Using Default length"
         )
 
-    try:
-        # If on pin name/number is not hidden, show set the synmbol hide property to 0
-        if data[9].split("^^")[1] != "0":
-            kicad_symbol.pinNamesHide = ""
-        if data[17].split("^^")[1] != "0":
-            kicad_symbol.pinNumbersHide = ""
-    except Exception:
+    if data[9].split("^^")[1] != "0":
         kicad_symbol.pinNamesHide = ""
+    if data[17].split("^^")[1] != "0":
         kicad_symbol.pinNumbersHide = ""
 
-    try:
-        nameSize = mil2mm(float(data[16].replace("pt", "")))
-        numberSize = mil2mm(float(data[24].replace("pt", "")))
-    except Exception:
-        nameSize = 1
-        numberSize = 1
+    name_size = mil2mm(float(data[16].replace("pt", ""))) if data[16] else 1
+    number_size = mil2mm(float(data[24].replace("pt", ""))) if data[24] else 1
 
     kicad_symbol.drawing += f"""
       (pin {electrical_type} line
-        (at {X} {Y} {rotation})
+        (at {x1} {y1} {rotation})
         (length {length})
-        (name "{pinName}" (effects (font (size {nameSize} {nameSize}))))
-        (number "{pinNumber}" (effects (font (size {numberSize} {numberSize}))))
+        (name "{pin_name}" (effects (font (size {name_size} {name_size}))))
+        (number "{pin_number}" (effects (font (size {number_size} {number_size}))))
       )"""
 
 
 def h_T(data, translation, kicad_symbol):
     """
-    Annotation handler
+    Text handler
+    data = [
+    0  :
+    1  : x1
+    2  : y1
+    3  : rotation
+    4  : color
+    5  : font
+    6  : font size
+    7  :
+    8  :
+    9  :
+    10 :
+    11 : text
+    12 :
+    13 : anchor
+    ]
     """
 
-    try:
-        X = mil2mm(float(data[1]) - translation[0])
-        Y = -mil2mm(float(data[2]) - translation[1])
-        angle = (float(data[3]) * 10 + 1800) % 3600
+    x1 = mil2mm(float(data[1]) - translation[0])
+    y1 = -mil2mm(float(data[2]) - translation[1])
 
-        fontSize = mil2mm(float(data[6].replace("pt", "")))
+    # From https://dev-docs.kicad.org/en/file-formats/sexpr-intro/index.html#_position_identifier
+    # Symbol text ANGLEs are stored in tenth’s of a degree. All other ANGLEs are stored
+    # in degrees.
+    rotation = ((int(data[3]) + 180) % 360) * 10
 
-        text = data[10]
-        kicad_symbol.drawing += f"""
+    font_size = mil2mm(float(data[6].replace("pt", ""))) if data[6] else 15
+
+    text = data[11]
+
+    if data[13] == "middle":
+        justify = "left"
+    elif data[13] == "end":
+        justify = "right"
+    else:
+        justify = "left"
+
+    kicad_symbol.drawing += f"""
       (text
         "{text}"
-        (at {X} {Y} {angle})
-        (effects (font (size {fontSize} {fontSize})))
+        (at {x1} {y1} {rotation})
+        (effects 
+            (font (size {font_size} {font_size}))
+            (justify {justify} bottom)
+        )
       )"""
-    except Exception:
-        logging.error("failed to add text to symbol")
 
 
 def h_PL(data, translation, kicad_symbol):
@@ -171,17 +216,16 @@ def h_PL(data, translation, kicad_symbol):
     Polygone handler
     """
 
-    try:
-        pathString = data[0].split(" ")
-        polypts = []
-        for i, _ in enumerate(pathString[::2]):
-            polypts.append(
-                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} "
-                f"{-mil2mm(float(pathString[2 * i + 1]) - translation[-1])})"
-            )
-        polystr = "\n          ".join(polypts)
+    path_string = data[0].split(" ")
+    polypts = []
+    for i, _ in enumerate(path_string[::2]):
+        polypts.append(
+            f"(xy {mil2mm(float(path_string[2 * i]) - translation[0])} "
+            f"{-mil2mm(float(path_string[2 * i + 1]) - translation[-1])})"
+        )
+    polystr = "\n          ".join(polypts)
 
-        kicad_symbol.drawing += f"""
+    kicad_symbol.drawing += f"""
       (polyline
         (pts
           {polystr}
@@ -189,8 +233,6 @@ def h_PL(data, translation, kicad_symbol):
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type none))
       )"""
-    except Exception:
-        logging.error("symbol : failed to add a polygone")
 
 
 def h_PG(data, translation, kicad_symbol):
@@ -198,18 +240,17 @@ def h_PG(data, translation, kicad_symbol):
     Closed polygone handler
     """
 
-    try:
-        pathString = [i for i in data[0].split(" ") if i]
-        polypts = []
-        for i, _ in enumerate(pathString[::2]):
-            polypts.append(
-                f"(xy {mil2mm(float(pathString[2 * i]) - translation[0])} "
-                f"{-mil2mm(float(pathString[2 * i + 1]) - translation[1])})"
-            )
-        polypts.append(polypts[0])
-        polystr = "\n          ".join(polypts)
+    path_string = [i for i in data[0].split(" ") if i]
+    polypts = []
+    for i, _ in enumerate(path_string[::2]):
+        polypts.append(
+            f"(xy {mil2mm(float(path_string[2 * i]) - translation[0])} "
+            f"{-mil2mm(float(path_string[2 * i + 1]) - translation[1])})"
+        )
+    polypts.append(polypts[0])
+    polystr = "\n          ".join(polypts)
 
-        kicad_symbol.drawing += f"""
+    kicad_symbol.drawing += f"""
       (polyline
         (pts
           {polystr}
@@ -217,8 +258,6 @@ def h_PG(data, translation, kicad_symbol):
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type background))
       )"""
-    except Exception:
-        logging.error("symbol : failed to add a polygone")
 
 
 def h_PT(data, translation, kicad_symbol):
@@ -226,11 +265,10 @@ def h_PT(data, translation, kicad_symbol):
     Triangle handler
     """
 
-    try:
-        data[0] = data[0].replace("M ", "").replace("L ", "").replace(" Z", "")
-        h_PG(data, translation, kicad_symbol)
-    except Exception:
-        logging.error("symbol : failed to add a triangle")
+    data[0] = (
+        data[0].replace("M", "").replace("L", "").replace("Z", "").replace("C", "")
+    )
+    h_PG(data, translation, kicad_symbol)
 
 
 def h_A(data, translation, kicad_symbol):

@@ -96,9 +96,7 @@ def create_symbol(
         kicad_symbol.drawing += f'''\n    (symbol "{component_title}_1"'''
 
         for line in symbol_shape:
-            args = [
-                i for i in line.split("~") if i
-            ]  # split and remove empty string in list
+            args = [i for i in line.split("~")]  # split arguments
             model = args[0]
             logging.debug(args)
             if model not in handlers:
