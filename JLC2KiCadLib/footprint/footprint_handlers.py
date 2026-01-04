@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from math import acos, pi, pow, sqrt
+from math import acos, cos, pi, pow, radians, sin, sqrt
 
 from KicadModTree import (
     Arc,
@@ -30,6 +30,7 @@ __all__ = [
     "h_HOLE",
     "h_TEXT",
     "mil2mm",
+    "svg_arc_to_points",
 ]
 
 layer_correspondance = {
@@ -42,10 +43,11 @@ layer_correspondance = {
     "7": "F.Mask",
     "8": "B.Mask",
     "10": "Edge.Cuts",
+    "11": "",  # EasyEDA "Multilayer"
     "12": "F.Fab",
-    "99": "F.SilkS",
-    "100": "F.SilkS",
-    "101": "F.SilkS",
+    "99": "",  # EasyEDA "Component shape layer"
+    "100": "",  # EasyEDA "Pin soldering layer"
+    "101": "",  # EasyEDA "Component marking layer"
 }
 
 
@@ -331,36 +333,178 @@ def h_CIRCLE(data, kicad_mod, footprint_info):
     kicad_mod.append(Circle(center=center, radius=radius, width=width, layer=layer))
 
 
+def svg_arc_to_points(x1, y1, rx, ry, rotation, large_arc_flag, sweep_flag, x2, y2):
+    """
+    Convert SVG arc to list of points using center parameterization.
+    Uses SVG arc implementation algorithm from W3C spec F.6.5.
+
+    Args:
+        x1, y1: Start point
+        rx, ry: Ellipse radii
+        rotation: X-axis rotation in degrees
+        large_arc_flag: 0 or 1
+        sweep_flag: 0 or 1
+        x2, y2: End point
+
+    Returns:
+        List of (x, y) tuples representing points along the arc
+    """
+    # Handle degenerate cases
+    if x1 == x2 and y1 == y2:
+        return []
+    if rx == 0 or ry == 0:
+        return [(x2, y2)]
+
+    rx = abs(rx)
+    ry = abs(ry)
+
+    cos_rot = cos(radians(rotation))
+    sin_rot = sin(radians(rotation))
+
+    # Compute (x1', y1') - rotated coordinates
+    dx = (x1 - x2) / 2
+    dy = (y1 - y2) / 2
+    x1_prime = cos_rot * dx + sin_rot * dy
+    y1_prime = -sin_rot * dx + cos_rot * dy
+
+    # Compute center (cx', cy')
+    rx_sq = rx * rx
+    ry_sq = ry * ry
+    x1_prime_sq = x1_prime * x1_prime
+    y1_prime_sq = y1_prime * y1_prime
+
+    # Correct radii if needed (ensure arc is possible)
+    lambda_sq = x1_prime_sq / rx_sq + y1_prime_sq / ry_sq
+    if lambda_sq > 1:
+        scale = sqrt(lambda_sq)
+        rx *= scale
+        ry *= scale
+        rx_sq = rx * rx
+        ry_sq = ry * ry
+
+    # Calculate center
+    denom = rx_sq * y1_prime_sq + ry_sq * x1_prime_sq
+    if denom == 0:
+        return [(x2, y2)]
+
+    sign = -1 if large_arc_flag == sweep_flag else 1
+    sq = max(0, (rx_sq * ry_sq - rx_sq * y1_prime_sq - ry_sq * x1_prime_sq) / denom)
+    coef = sign * sqrt(sq)
+
+    cx_prime = coef * rx * y1_prime / ry
+    cy_prime = -coef * ry * x1_prime / rx
+
+    # Compute center (cx, cy) in original coordinates
+    cx = cos_rot * cx_prime - sin_rot * cy_prime + (x1 + x2) / 2
+    cy = sin_rot * cx_prime + cos_rot * cy_prime + (y1 + y2) / 2
+
+    # Calculate start angle and delta angle
+    def angle_between(ux, uy, vx, vy):
+        n = sqrt(ux * ux + uy * uy) * sqrt(vx * vx + vy * vy)
+        if n == 0:
+            return 0
+        c = (ux * vx + uy * vy) / n
+        c = max(-1, min(1, c))
+        angle = acos(c)
+        if ux * vy - uy * vx < 0:
+            angle = -angle
+        return angle
+
+    theta1 = angle_between(1, 0, (x1_prime - cx_prime) / rx, (y1_prime - cy_prime) / ry)
+    dtheta = angle_between(
+        (x1_prime - cx_prime) / rx,
+        (y1_prime - cy_prime) / ry,
+        (-x1_prime - cx_prime) / rx,
+        (-y1_prime - cy_prime) / ry,
+    )
+
+    # Adjust delta angle based on sweep flag
+    if sweep_flag == 0 and dtheta > 0:
+        dtheta -= 2 * pi
+    elif sweep_flag == 1 and dtheta < 0:
+        dtheta += 2 * pi
+
+    # Generate points along the arc (adaptive resolution)
+    num_segments = max(8, int(abs(dtheta) / (2 * pi) * 32))
+
+    points = []
+    for i in range(1, num_segments + 1):  # Skip first point (it's the current position)
+        angle = theta1 + dtheta * i / num_segments
+        x = cx + rx * cos(angle) * cos_rot - ry * sin(angle) * sin_rot
+        y = cy + rx * cos(angle) * sin_rot + ry * sin(angle) * cos_rot
+        points.append((x, y))
+
+    return points
+
+
 def h_SOLIDREGION(data, kicad_mod, footprint_info):
-    try:
-        # edge cut in footprint
-        if data[2] == "npth":
-            if (
-                "A" in data[1]
-            ):  # A is present for when arcs are in the shape, help is needed to parse
-                # and format these
-                logging.warning(
-                    "footprint handler : h_SOLIDREGION, Edge.Cuts shape not handled, "
-                    "see https://github.com/TousstNicolas/JLC2KiCad_lib/issues/41 for "
-                    "more informations"
+    layer = "Edge.Cuts" if data[3] == "npth" else layer_correspondance[data[0]]
+
+    path = data[2]
+    points = []
+    current_pos = (0.0, 0.0)
+
+    # Parse SVG path
+    command_pattern = re.compile(
+        r"([MLAZ])\s*"
+        r"((?:[-+]?\d*\.?\d+[\s,]*)*)",
+        re.IGNORECASE,
+    )
+
+    # Pattern to extract numbers
+    number_pattern = re.compile(r"[-+]?\d*\.?\d+")
+
+    for match in command_pattern.finditer(path):
+        cmd = match.group(1).upper()
+        params_str = match.group(2)
+        params = [float(n) for n in number_pattern.findall(params_str)]
+
+        if cmd == "M":
+            # Move to: M x y
+            if len(params) >= 2:
+                current_pos = (params[0], params[1])
+                points.append(current_pos)
+
+        elif cmd == "L":
+            # Line to: L x y
+            if len(params) >= 2:
+                current_pos = (params[0], params[1])
+                points.append(current_pos)
+
+        elif cmd == "A":
+            # Arc: A rx ry rotation large-arc-flag sweep-flag x y
+            if len(params) >= 7:
+                rx = params[0]
+                ry = params[1]
+                rotation = params[2]
+                large_arc_flag = int(params[3])
+                sweep_flag = int(params[4])
+                end_x = params[5]
+                end_y = params[6]
+
+                arc_points = svg_arc_to_points(
+                    current_pos[0],
+                    current_pos[1],
+                    rx,
+                    ry,
+                    rotation,
+                    large_arc_flag,
+                    sweep_flag,
+                    end_x,
+                    end_y,
                 )
-                return
+                points.extend(arc_points)
+                current_pos = (end_x, end_y)
 
-            # use regular expression to find all the numeric values in the string that
-            # come after "M" or "L" (other shapes are not yet handled)
-            matches = re.findall(
-                r"(?:M|L)\s+([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)", data[1]
-            )
+        elif cmd == "Z":
+            # Close path - no action needed, polygon will close automatically
+            pass
 
-            # convert the list of numbers to a list of tuples with x, y coordinates
-            points = [(mil2mm(m[0]), mil2mm(m[1])) for m in matches]
+    # Convert from mils to mm
+    points = [(mil2mm(p[0]), mil2mm(p[1])) for p in points]
 
-            # appends nods to footprint
-            kicad_mod.append(Polygon(nodes=points, layer="Edge.Cuts"))
-
-    except Exception:
-        logging.exception("footprint handler, h_SOLIDREGION: failed to add SOLIDREGION")
-        return
+    if points:
+        kicad_mod.append(Polygon(nodes=points, layer=layer))
 
 
 def h_SVGNODE(data, kicad_mod, footprint_info):
