@@ -232,12 +232,10 @@ def h_ARC(data, kicad_mod, footprint_info):
     layer = layer_correspondance[data[1]]
     svg_path = data[3]
 
-    # Regular expression to match ARC pattern
-    # coordinates can sometime be separated by a "," instead of a space,
-    # therefore we match it using [\s,*?]
+    # Parse SVG path
     pattern = (
-        r"M\s*([\d\.\-]+)[\s,*?]([\d\.\-]+)\s?A\s*([\d\.\-]+)[\s,*?]"
-        r"([\d\.\-]+) ([\d\.\-]+) (\d) (\d) ([\d\.\-]+)[\s,*?]([\d\.\-]+)"
+        r"M\s*([-\d.]+)[\s,]+([-\d.]+)\s*A\s*([-\d.]+)[\s,]+"
+        r"([-\d.]+)[\s,]+([-\d.]+)[\s,]+(\d)[\s,]+(\d)[\s,]+([-\d.]+)[\s,]+([-\d.]+)"
     )
 
     match = re.search(pattern, svg_path)
@@ -257,13 +255,28 @@ def h_ARC(data, kicad_mod, footprint_info):
     width = mil2mm(width)
     start_x = mil2mm(start_x)
     start_y = mil2mm(start_y)
-    mid_x = mil2mm(rx)
-    mid_y = mil2mm(ry)
+    radius_x = mil2mm(rx)
+    radius_y = mil2mm(ry)
     end_x = mil2mm(end_x)
     end_y = mil2mm(end_y)
 
     start = [start_x, start_y]
     end = [end_x, end_y]
+
+    # Check if this is a full circle (start == end)
+    if abs(start_x - end_x) < 1e-6 and abs(start_y - end_y) < 1e-6:
+        # Full circle: center is offset from start by radius
+        # Direction depends on sweep_flag
+        radius = radius_x  # Assuming circular arc (rx == ry)
+        # For sweep_flag=1 (clockwise in SVG), center is to the right
+        # For sweep_flag=0 (counter-clockwise), center is to the left
+        if sweep_flag == 1:
+            center = [start_x + radius, start_y]
+        else:
+            center = [start_x - radius, start_y]
+        kicad_mod.append(Circle(center=center, radius=radius, width=width, layer=layer))
+        return
+
     if sweep_flag == 0:
         start, end = end, start
 
@@ -271,12 +284,9 @@ def h_ARC(data, kicad_mod, footprint_info):
     mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
     # create vector from start to mid:
     vec1 = Vector2D(mid[0] - start[0], mid[1] - start[1])
-    if vec1 == Vector2D(0, 0):
-        logging.error("footprint handler, h_ARC: failed to create arc")
-        return
 
     # create vector that's normal to vec1:
-    length_squared = mid_x * mid_y - pow(vec1.distance_to((0, 0)), 2)
+    length_squared = radius_x * radius_y - pow(vec1.distance_to((0, 0)), 2)
     if length_squared < 0:
         length_squared = 0
         large_arc_flag = 1
@@ -286,30 +296,8 @@ def h_ARC(data, kicad_mod, footprint_info):
     magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
     vec2 = Vector2D(vec2[0] / magnitude, vec2[1] / magnitude)
 
-    # calculate the lenght from mid to centre using pythagoras:
     length = sqrt(length_squared)
-    # calculate the centre using mid and vec2 with the correct length:
     cen = Vector2D(mid) + vec2 * length
-
-    cen_start = cen - start
-    cen_end = cen - end
-
-    # calculate angle between cen_start and cen_end
-    dot_product = cen_start.x * cen_end.x + cen_start.y * cen_end.y
-    angle = (
-        acos(
-            round(
-                dot_product
-                / (cen_start.distance_to((0, 0)) * cen_end.distance_to((0, 0))),
-                4,
-            )
-        )
-        * 180
-        / pi
-    )
-
-    if large_arc_flag == 1:
-        angle = 360 - angle
 
     kicad_mod.append(Arc(start=start, end=end, width=width, center=cen, layer=layer))
 
