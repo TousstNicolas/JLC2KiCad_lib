@@ -234,7 +234,7 @@ Shape{{
                 rotate=[-float(axis_rotation) for axis_rotation in rotation.split(",")],
             )
         )
-        logging.info(f"added {path_name} to footprintc")
+        logging.info(f"added {path_name} to footprint")
 
 
 def ensure_footprint_lib_directories_exist(footprint_info):

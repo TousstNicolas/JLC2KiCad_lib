@@ -201,7 +201,7 @@ def main():
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
-        help="Print versin number and exit",
+        help="Print version number and exit",
     )
 
     args = parser.parse_args()
