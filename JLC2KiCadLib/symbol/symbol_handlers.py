@@ -6,7 +6,18 @@ RELATIVE_OFFSET = 0.254
 ABSOLUTE_OFFSET_X = 101.6
 ABSOLUTE_OFFSET_Y = -63.5
 
-__all__ = ["handlers", "h_R", "h_E", "h_P", "h_T", "h_PL", "h_PG", "h_PT", "h_A"]
+__all__ = [
+    "handlers",
+    "h_R",
+    "h_E",
+    "h_P",
+    "h_T",
+    "h_PL",
+    "h_PG",
+    "h_PT",
+    "h_A",
+    "h_AR",
+]
 
 
 def mil2mm(data):
@@ -389,6 +400,58 @@ def h_A(data, translation, kicad_symbol):
       )"""
 
 
+def h_AR(data, translation, kicad_symbol):
+    """
+    Arrowhead handler
+
+    data = {
+        0  : type
+        1  : x position
+        2  : y position
+        3  : id
+        4  : rotation angle
+        5  : SVG path
+        6  : stroke color
+        7  : ?
+        8  : stroke width?
+        9  : ?
+    }
+    """
+
+    svg_path = data[5]
+
+    # Remove SVG commands and extract coordinates
+    path_cleaned = svg_path.replace("M", "").replace("L", "").replace("Z", "").strip()
+
+    # Split into coordinate pairs
+    coords = re.split(r"[\s,]+", path_cleaned)
+    coords = [c for c in coords if c]
+
+    polypts = []
+    for i in range(0, len(coords) - 1, 2):
+        x = float(coords[i])
+        y = float(coords[i + 1])
+        polypts.append(
+            f"(xy {mil2mm(x - translation[0])} {-mil2mm(y - translation[1])})"
+        )
+
+    if not polypts:
+        return
+
+    # Close the polygon
+    polypts.append(polypts[0])
+    polystr = "\n          ".join(polypts)
+
+    kicad_symbol.drawing += f"""
+      (polyline
+        (pts
+          {polystr}
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )"""
+
+
 handlers = {
     "R": h_R,
     "E": h_E,
@@ -398,9 +461,9 @@ handlers = {
     "PG": h_PG,
     "PT": h_PT,
     "A": h_A,
+    "AR": h_AR,
     # "J" : h_NotYetImplemented,
     # "N" : h_NotYetImplemented,
     # "BE" : h_NotYetImplemented,
-    # "AR" : h_NotYetImplemented,
     # "O" : h_NotYetImplemented,
 }
