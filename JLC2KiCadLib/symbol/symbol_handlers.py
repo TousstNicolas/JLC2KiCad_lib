@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 
 RELATIVE_OFFSET = 0.254
@@ -276,105 +277,116 @@ def h_A(data, translation, kicad_symbol):
     Arc handler
     """
 
-    from math import acos, cos, pi, sin, sqrt
+    # Parse SVG path: "M x1 y1 A rx ry rotation large-arc sweep x2 y2"
+    path = data[0].strip()
 
-    # ruff: disable [E741]
-    # Function reversed from https://easyeda.com/editor/6.5.5/js/editorPCB.min.js
-    def getCenterParam(match):
-        e = float([i for i in re.split(r" |,", match[0][1]) if i][0])
-        t = float([i for i in re.split(r" |,", match[0][1]) if i][1])
-        s = float([i for i in re.split(r" |,", match[1][1]) if i][0])
-        l = float([i for i in re.split(r" |,", match[1][1]) if i][1])
-        r = float([i for i in re.split(r" |,", match[1][1]) if i][3])
-        o = float([i for i in re.split(r" |,", match[1][1]) if i][4])
-        n = float([i for i in re.split(r" |,", match[1][1]) if i][5])
-        a = float([i for i in re.split(r" |,", match[1][1]) if i][6])
+    # Split into M and A commands
+    parts = re.split(r"[MA]", path)
+    parts = [p.strip() for p in parts if p.strip()]
 
-        def c(e, t, n, a):
-            i = e * n + t * a
-            r = sqrt((e * e + t * t) * (n * n + a * a))
-            o = acos(i / r)
-            return o
+    # Parse M command (start point)
+    start_coords = re.split(r"[\s,]+", parts[0])
+    x1 = float(start_coords[0])
+    y1 = float(start_coords[1])
 
-        f = 2 * pi
-        if o < 0:
-            o = -o
-        if s < 0:
-            s = -s
-        if o == s:
-            l = 0
-        C = sin(l)
-        y = cos(l)
-        b = (e - n) / 2
-        v = (t - a) / 2
-        S = (e + n) / 2
-        P = (t + a) / 2
-        if o < 0.00001 or s < 0.00001:
-            h = c(1, 0, n - e, a - t)
-            return (S, P, h, pi)
-        A = y * b + C * v
-        T = y * v - C * b
-        D = A * A / (o * o) + T * T / (s * s)
-        if D > 1:
-            o *= sqrt(D)
-            s *= sqrt(D)
-        k = o * s
-        M = o * T
-        I = s * A
-        L = M * M + I * I
-        if not L:
-            return (S, P, 0, 0)
-        w = (k * k - L) / L
-        w = sqrt(abs(w))
-        O = w * M / s
-        R = -w * I / o
-        u = y * O - C * R + S
-        g = C * O + y * R + P
-        E = (A - O) / o
-        N = (A + O) / o
-        F = (T - R) / s
-        x = (T + R) / s
-        h = c(1, 0, E, F)
-        m = c(E, F, -N, -x)
-        while m > f:
-            m -= f
-        while m < 0:
-            m += f
-        if r != 0:
-            m -= f
-        return (u, g, h, m)
+    # Parse A command (arc parameters)
+    arc_params = re.split(r"[\s,]+", parts[1])
+    rx = float(arc_params[0])
+    ry = float(arc_params[1])
+    rotation = float(arc_params[2])
+    large_arc_flag = int(arc_params[3])
+    sweep_flag = int(arc_params[4])
+    x2 = float(arc_params[5])
+    y2 = float(arc_params[6])
 
-    # ruff: enable [E741]
+    cos_rot = math.cos(math.radians(rotation))
+    sin_rot = math.sin(math.radians(rotation))
 
-    try:
-        match = re.findall(r"([MA])([eE ,\-\+.\d]+)", data[0])
-        cx, cy, theta, deltaTheta = getCenterParam(match)
-        radius = float([i for i in re.split(r" |,", match[1][1]) if i][0])
-        theta /= 2
-        Xstart = cx + radius * cos(theta)
-        Ystart = -(cy - radius * sin(theta))
-        Xend = cx + radius * cos(theta + deltaTheta)
-        Yend = -(cy - radius * sin(theta + deltaTheta))
-        Xmid = cx + radius * cos(theta + deltaTheta / 2)
-        Ymid = -(cy - radius * sin(theta + deltaTheta / 2))
+    # Step 1: Compute (x1', y1')
+    dx = (x1 - x2) / 2
+    dy = (y1 - y2) / 2
+    x1_prime = cos_rot * dx + sin_rot * dy
+    y1_prime = -sin_rot * dx + cos_rot * dy
 
-        Xstart = mil2mm(Xstart - translation[0])
-        Ystart = -mil2mm(Ystart - translation[1])
-        Xend = mil2mm(Xend - translation[0])
-        Yend = -mil2mm(Yend - translation[1])
-        Xmid = mil2mm(Xmid - translation[0])
-        Ymid = -mil2mm(Ymid - translation[1])
+    # Step 2: Compute center (cx', cy')
+    rx_sq = rx * rx
+    ry_sq = ry * ry
+    x1_prime_sq = x1_prime * x1_prime
+    y1_prime_sq = y1_prime * y1_prime
 
-        kicad_symbol.drawing += f"""
+    # Correct radii if needed
+    lambda_sq = x1_prime_sq / rx_sq + y1_prime_sq / ry_sq
+    if lambda_sq > 1:
+        rx *= math.sqrt(lambda_sq)
+        ry *= math.sqrt(lambda_sq)
+        rx_sq = rx * rx
+        ry_sq = ry * ry
+
+    sign = -1 if large_arc_flag == sweep_flag else 1
+
+    if (rx_sq * y1_prime_sq + ry_sq * x1_prime_sq) == 0:
+        return
+
+    sq = max(
+        0,
+        (rx_sq * ry_sq - rx_sq * y1_prime_sq - ry_sq * x1_prime_sq)
+        / (rx_sq * y1_prime_sq + ry_sq * x1_prime_sq),
+    )
+    coef = sign * math.sqrt(sq)
+
+    cx_prime = coef * rx * y1_prime / ry
+    cy_prime = -coef * ry * x1_prime / rx
+
+    # Step 3: Compute center (cx, cy)
+    cx = cos_rot * cx_prime - sin_rot * cy_prime + (x1 + x2) / 2
+    cy = sin_rot * cx_prime + cos_rot * cy_prime + (y1 + y2) / 2
+
+    # Calculate angles for finding midpoint
+    def angle_between(ux, uy, vx, vy):
+        n = math.sqrt(ux * ux + uy * uy) * math.sqrt(vx * vx + vy * vy)
+        c = (ux * vx + uy * vy) / n
+        c = max(-1, min(1, c))  # Clamp to [-1, 1]
+        angle = math.acos(c)
+        if ux * vy - uy * vx < 0:
+            angle = -angle
+        return angle
+
+    theta1 = angle_between(1, 0, (x1_prime - cx_prime) / rx, (y1_prime - cy_prime) / ry)
+    dtheta = angle_between(
+        (x1_prime - cx_prime) / rx,
+        (y1_prime - cy_prime) / ry,
+        (-x1_prime - cx_prime) / rx,
+        (-y1_prime - cy_prime) / ry,
+    )
+
+    if sweep_flag == 0 and dtheta > 0:
+        dtheta -= 2 * math.pi
+    elif sweep_flag == 1 and dtheta < 0:
+        dtheta += 2 * math.pi
+
+    # Calculate midpoint angle
+    mid_angle = theta1 + dtheta / 2
+
+    # Calculate midpoint coordinates
+    x_mid = cx + rx * math.cos(mid_angle) * cos_rot - ry * math.sin(mid_angle) * sin_rot
+    y_mid = cy + rx * math.cos(mid_angle) * sin_rot + ry * math.sin(mid_angle) * cos_rot
+
+    # Convert to KiCad coordinates (mil to mm and apply translation)
+    x1_mm = mil2mm(x1 - translation[0])
+    y1_mm = -mil2mm(y1 - translation[1])
+    x2_mm = mil2mm(x2 - translation[0])
+    y2_mm = -mil2mm(y2 - translation[1])
+    x_mid_mm = mil2mm(x_mid - translation[0])
+    y_mid_mm = -mil2mm(y_mid - translation[1])
+
+    kicad_symbol.drawing += f"""
       (arc
-        (start {Xstart} {Ystart})
-        (mid {Xmid} {Ymid})
-        (end {Xend} {Yend})
+        (start {x1_mm} {y1_mm})
+        (mid {x_mid_mm} {y_mid_mm})
+        (end {x2_mm} {y2_mm})
         (stroke (width 0) (type default) (color 0 0 0 0))
         (fill (type none))
       )"""
-    except Exception:
-        logging.error("symbol : failed to add an arc")
 
 
 handlers = {
