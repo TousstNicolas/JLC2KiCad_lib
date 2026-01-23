@@ -127,7 +127,7 @@ def h_PAD(data, kicad_mod, footprint_info):
     at = [mil2mm(data[1]), mil2mm(data[2])]
     size = [mil2mm(data[3]), mil2mm(data[4])]
     layer = data[5]
-    pad_number = data[6]
+    pad_number = data[7]
 
     drill_diameter = float(mil2mm(data[8])) * 2
     drill_size = drill_diameter

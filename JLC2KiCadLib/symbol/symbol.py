@@ -20,6 +20,14 @@ supported_value_types = [
     "Frequency",
 ]  # define which attribute/value from JLCPCB/LCSC will be added in the "value" field
 
+designator_to_value_type = {
+    "C?": "Capacitance",
+    "R?": "Resistance", 
+    "L?": "Inductance",
+    "Y?": "Frequency",  # Crystal oscillators
+    "X?": "Frequency",  # Crystal oscillators alternative
+}
+
 
 def create_symbol(
     symbol_component_uuid,
@@ -68,13 +76,20 @@ def create_symbol(
 
         component_types_values = []
         for value_type in supported_value_types:
-            if value_type in data["result"]["dataStr"]["head"]["c_para"]:
-                component_types_values.append(
-                    (
-                        value_type,
-                        data["result"]["dataStr"]["head"]["c_para"][value_type],
-                    )
+            component_para = data["result"]["dataStr"]["head"]["c_para"]
+            value_key = value_type
+            if value_type not in component_para.values():
+                # Check if we can determine the value type from the prefix
+                if value_type != designator_to_value_type.get(component_para.get('pre',None), None):
+                    continue
+                value_key = 'Value'
+                
+            component_types_values.append(
+                (
+                    value_type,
+                    component_para[value_key],
                 )
+            )
 
         if not ComponentName:
             ComponentName = component_title
@@ -118,8 +133,11 @@ def create_symbol(
     (property "Reference" "{symmbol_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "{ComponentName}" (id 1) (at 0 -2.54 0)
+    (property "Value" "{component_types_values[0][1] if component_types_values else ComponentName}" (id 1) (at 0 -2.54 0)
       (effects (font (size 1.27 1.27)))
+    )
+    (property "Manufacturer #" "{ComponentName}" (id 1) (at 0 -2.54 0)
+      (effects (font (size 1.27 1.27)) hide)
     )
     (property "Footprint" "{footprint_name}" (id 2) (at 0 -10.16 0)
       (effects (font (size 1.27 1.27) italic) hide)
@@ -128,6 +146,9 @@ def create_symbol(
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
     (property "ki_keywords" "{component_id}" (id 4) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "ki_keywords" "{ComponentName}" (id 4) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "LCSC" "{component_id}" (id 5) (at 0 0 0)
