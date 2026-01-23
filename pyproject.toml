@@ -1,0 +1,46 @@
+[project]
+name = "JLC2KiCadLib"
+version = "1.2.0"
+description = "JLC2KiCad_lib is a python script that generate a component library (symbol, footprint and 3D model) for KiCad from the JLCPCB/easyEDA library."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["KicadModTree", "requests"]
+authors = [
+  {name = "TousstNicolas"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+license = "MIT"
+license-files = ["LICENCE"]
+
+[project.scripts]
+JLC2KiCadLib = "JLC2KiCadLib.JLC2KiCadLib:main"
+
+[project.urls]
+Homepage = "https://github.com/TousstNicolas/JLC2KiCad_lib"
+Issues = "https://github.com/TousstNicolas/JLC2KiCad_lib/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = ["F841"]

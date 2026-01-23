@@ -1,13 +1,13 @@
-import requests
 import json
-import re
-import os
 import logging
+import os
+import re
 
-from .symbol_handlers import *
+import requests
 
+from .symbol_handlers import handlers
 
-template_lib_header = f"""\
+template_lib_header = """\
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
 """
 
@@ -53,12 +53,13 @@ def create_symbol(
             data = json.loads(response.content.decode())
         else:
             logging.error(
-                f"create_symbol error. Requests returned with error code {response.status_code}"
+                f"create_symbol error. Requests returned with error code "
+                f"{response.status_code}"
             )
             return ()
 
         symbol_shape = data["result"]["dataStr"]["shape"]
-        symmbolic_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"][
+        symmbol_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"][
             "pre"
         ].replace("?", "")
         component_title = (
@@ -110,9 +111,7 @@ def create_symbol(
         kicad_symbol.drawing += f'''\n    (symbol "{component_title}_1"'''
 
         for line in symbol_shape:
-            args = [
-                i for i in line.split("~") if i
-            ]  # split and remove empty string in list
+            args = [i for i in line.split("~")]  # split arguments
             model = args[0]
             logging.debug(args)
             if model not in handlers:
@@ -128,9 +127,10 @@ def create_symbol(
                 )
         kicad_symbol.drawing += """\n    )"""
 
+    # ruff: disable [E501]
     template_lib_component = f"""\
   (symbol "{ComponentName}" {kicad_symbol.pinNamesHide} {kicad_symbol.pinNumbersHide} (in_bom yes) (on_board yes)
-    (property "Reference" "{symmbolic_prefix}" (id 0) (at 0 1.27 0)
+    (property "Reference" "{symmbol_prefix}" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "{component_types_values[0][1] if component_types_values else ComponentName}" (id 1) (at 0 -2.54 0)
@@ -157,6 +157,7 @@ def create_symbol(
     {get_type_values_properties(6, component_types_values)}{kicad_symbol.drawing}
   )
 """
+    # ruff: enable [E501]
 
     if not os.path.exists(f"{output_dir}/{symbol_path}"):
         os.makedirs(f"{output_dir}/{symbol_path}")
@@ -186,6 +187,7 @@ def create_symbol(
 
 
 def get_type_values_properties(start_index, component_types_values):
+    # ruff: disable [E501]
     return "\n".join(
         [
             f"""(property "{type_value[0]}" "{type_value[1]}" (id {start_index + index}) (at 0 0 0)
@@ -194,6 +196,7 @@ def get_type_values_properties(start_index, component_types_values):
             for index, type_value in enumerate(component_types_values)
         ]
     )
+    # ruff: enable [E501]
 
 
 def update_library(
@@ -214,7 +217,7 @@ def update_library(
     with open(
         f"{output_dir}/{symbol_path}/{library_name}.kicad_sym", "rb+"
     ) as lib_file:
-        pattern = f'  \\(symbol "{component_title}" (\\n|.)*?\\n  \\)'
+        pattern = rf'  \(symbol "{component_title}" (\n|.)*?\n  \)'
         file_content = lib_file.read().decode()
 
         if f'symbol "{component_title}"' in file_content:
@@ -223,7 +226,8 @@ def update_library(
                     f"component {component_title} already in symbols library, skipping"
                 )
                 return
-            # use regex to find the old component template in the file and replace it with the new one
+            # use regex to find the old component template in the file and
+            # replace it with the new one
             logging.info(
                 f"found component already in {library_name}, updating {library_name}"
             )
