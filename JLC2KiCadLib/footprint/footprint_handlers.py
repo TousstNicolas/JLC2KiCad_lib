@@ -43,11 +43,11 @@ layer_correspondance = {
     "7": "F.Mask",
     "8": "B.Mask",
     "10": "Edge.Cuts",
-    "11": "",  # EasyEDA "Multilayer"
+    "11": "",
     "12": "F.Fab",
-    "99": "",  # EasyEDA "Component shape layer"
-    "100": "",  # EasyEDA "Pin soldering layer"
-    "101": "",  # EasyEDA "Component marking layer"
+    "99": "F.SilkS",
+    "100": "F.SilkS",
+    "101": "F.SilkS",
 }
 
 
@@ -127,6 +127,8 @@ def h_PAD(data, kicad_mod, footprint_info):
     at = [mil2mm(data[1]), mil2mm(data[2])]
     size = [mil2mm(data[3]), mil2mm(data[4])]
     layer = data[5]
+    if layer == '':
+        print('hey')
     pad_number = data[7]
 
     drill_diameter = float(mil2mm(data[8])) * 2
