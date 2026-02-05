@@ -15,9 +15,11 @@ from .symbol.symbol import create_symbol
 
 def add_component(component_id, args):
     logging.info(f"creating library for component {component_id}")
+    headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
     data = json.loads(
         requests.get(
-            f"https://easyeda.com/api/products/{component_id}/svgs"
+            f"https://easyeda.com/api/products/{component_id}/svgs",
+            headers=headers
         ).content.decode()
     )
 

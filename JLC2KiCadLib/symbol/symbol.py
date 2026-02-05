@@ -45,10 +45,10 @@ def create_symbol(
         pinNumbersHide = "(pin_numbers hide)"
 
     kicad_symbol = kicad_symbol()
-
+    headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
     ComponentName = ""
     for component_uuid in symbol_component_uuid:
-        response = requests.get(f"https://easyeda.com/api/components/{component_uuid}")
+        response = requests.get(f"https://easyeda.com/api/components/{component_uuid}",headers=headers)
         if response.status_code == requests.codes.ok:
             data = json.loads(response.content.decode())
         else:
