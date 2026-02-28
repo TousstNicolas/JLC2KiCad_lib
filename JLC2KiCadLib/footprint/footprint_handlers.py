@@ -43,11 +43,11 @@ layer_correspondance = {
     "7": "F.Mask",
     "8": "B.Mask",
     "10": "Edge.Cuts",
-    "11": "F.Fab",  # EasyEDA "Multilayer"
+    "11": "User.Comments",  # EasyEDA "Multilayer"
     "12": "F.Fab",
-    "99": "F.Fab",  # EasyEDA "Component shape layer"
-    "100": "F.Fab",  # EasyEDA "Pin soldering layer"
-    "101": "F.Fab",  # EasyEDA "Component marking layer"
+    "99": "User.Comments",  # EasyEDA "Component shape layer"
+    "100": "User.Comments",  # EasyEDA "Pin soldering layer"
+    "101": "User.Comments",  # EasyEDA "Component marking layer"
 }
 
 
