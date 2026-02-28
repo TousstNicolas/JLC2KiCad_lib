@@ -122,25 +122,44 @@ def h_P(data, translation, kicad_symbol):
     25 :
     ]
     """
-
-    if data[1] == "0":
-        electrical_type = "unspecified"
-    elif data[1] == "1":
-        electrical_type = "input"
-    elif data[1] == "2":
-        electrical_type = "output"
-    elif data[1] == "3":
-        electrical_type = "bidirectional"
-    elif data[1] == "4":
-        electrical_type = "power_in"
-    else:
-        electrical_type = "unspecified"
+    eTypeMap = {
+        "0": "passive",
+        "1": "input",
+        "2": "output",
+        "3": "bidirectional",
+        "4": "power_in",
+    }
+    electrical_type = eTypeMap.get(data[1], "unspecified")
 
     pin_number = data[2]
     pin_name = data[13]
 
     x1 = round(mil2mm(float(data[3]) - translation[0]), 3)
     y1 = round(-mil2mm(float(data[4]) - translation[1]), 3)
+
+    pinTypeMap = {
+        "GND": "power_in",
+        "VCC": "power_in",
+        "VDD": "power_in",
+        "VIN": "power_in",
+        "3V3": "power_in",
+        "IO": "bidirectional",
+        "EN": "input",
+        "NC": "no_connect",
+        "VOUT": "power_out",
+        "OUT": "output",
+        "TX": "output",
+        "RX": "input",
+        "SCL": "unspecified",
+        "SDA": "bidirectional",
+    }
+
+    if electrical_type in ["passive", "unspecified"]:
+        pin_nameUpper = pin_name.upper()
+        for tag, eType in pinTypeMap.items():
+            if tag in pin_nameUpper:
+                electrical_type = eType
+                break
 
     rotation = (int(data[5]) + 180) % 360 if data[5] else 180
 
