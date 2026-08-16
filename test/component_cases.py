@@ -115,6 +115,32 @@ TEST_CASES = [
         description="Skip existing arguments",
         args=["--skip-existing"],
     ),
+    ComponentTestCase(
+        # Sampled via a broad online scan (500 components, one per distinct
+        # JLCPCB package) run to find courtyard-generation edge cases. All
+        # of these produced a valid F.CrtYd and passed KLC rule F5.3;
+        # kept here to broaden package diversity for regression coverage
+        # (large BGA/QFP packages, connectors, THT switches, etc.).
+        component_id=[
+            "C430532",  # CONN-TH_13P-P5.08_DB2ERM-5.08-13P-GN
+            "C2655075",  # VFLGA-14
+            "C150435",  # TSOP-50_10.2x21.0x0.8P
+            "C1338524",  # LQFP-128
+            "C527553",  # FCBGA-841
+            "C903521",  # SOIC-10
+            "C273395",  # SW-TH_EG1224
+            "C383068",  # TO-220B-5L
+            "C396664",  # OPTO-TH_DY-ITR8105
+            "C501316",  # SW-TH_6P-L7.2-W7.2-P2.54-LS7.62-T
+            "C130779",  # QFN-16L
+            "C534749",  # PG-TO-220-7
+            "C2150643",  # HSOP-44
+            "C2832751",  # TQFP-100_12.0X12.0X0.4P
+            "C1346215",  # SOIC-16_L10.3-W7.5-P1.27-LS10.3-BL
+        ],
+        description="courtyard package diversity booster",
+        expect_symbol=False,
+    ),
 ]
 
 
