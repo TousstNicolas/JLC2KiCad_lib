@@ -24,6 +24,9 @@ JLC2KiCadLib = "JLC2KiCadLib.JLC2KiCadLib:main"
 Homepage = "https://github.com/TousstNicolas/JLC2KiCad_lib"
 Issues = "https://github.com/TousstNicolas/JLC2KiCad_lib/issues"
 
+[dependency-groups]
+test = ["pytest>=8.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

@@ -116,6 +116,26 @@ By default, the library folder will be created in the execution directory. You c
 
 JLC2KiCadLib relies on the [KicadModTree](https://gitlab.com/kicad/libraries/kicad-footprint-generator) framework to generate the footprints. 
 
+## Testing
+
+The project has a pytest-based test suite in `test/`:
+
+* Unit tests (e.g. `test/test_courtyard.py`) run offline and exercise individual
+  handlers/helpers with synthetic data.
+* Integration tests (`test/test_components.py`) generate real components from
+  JLCPCB part numbers (defined in `test/component_cases.py`) and validate them
+  against KiCad's [KLC](https://klc.kicad.org/) rules, using the
+  `kicad-library-utils` git submodule.
+
+To run the tests:
+
+```bash
+git submodule update --init
+uv sync --group test
+uv run pytest                       # unit tests only
+uv run pytest -m integration        # integration tests (requires network access)
+```
+
 ## Notes
 
 * Even so I tested the script on a lot of components, be careful and always check the output footprint and symbol.
