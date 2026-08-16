@@ -4,10 +4,24 @@ import os
 from dataclasses import dataclass
 
 import requests
-from KicadModTree import Footprint, KicadFileHandler, Pad, Text, Translation
+from KicadModTree import Footprint, KicadFileHandler, Pad, RectLine, Text, Translation
 
 from .. import helper
 from .footprint_handlers import handlers, mil2mm
+
+# Courtyard generation constants.
+# EasyEDA footprint data does not include courtyard information, so a
+# courtyard is approximated the same way KiCad's own EasyEDA importer does:
+# by inflating the bounding box of the copper/fab/paste/mask/edge-cuts
+# graphics by a flat clearance and snapping the resulting rectangle to the
+# standard KiCad courtyard grid.
+CRTYD_CLEARANCE = 0.25  # mm
+CRTYD_WIDTH = 0.05  # mm, matches KLC_CRTYD_WIDTH
+CRTYD_GRID = 0.01  # mm, matches KLC_CRTYD_GRID
+
+
+def _snap_to_grid(value, grid=CRTYD_GRID):
+    return round(round(value / grid) * grid, 6)
 
 
 @dataclass
@@ -16,6 +30,15 @@ class FootprintInfo:
     max_Y: float = -10000
     min_X: float = 10000
     min_Y: float = 10000
+    # Bounding box restricted to layers relevant to courtyard generation
+    # (F.Cu, B.Cu, F.Paste, B.Paste, F.Mask, B.Mask, F.Fab, Edge.Cuts).
+    # Kept separate from min_X/max_X/min_Y/max_Y above, which are used for
+    # reference/value/user text placement and are updated from a broader
+    # (and inconsistent) set of shapes, including silkscreen.
+    crtyd_max_X: float = -10000
+    crtyd_max_Y: float = -10000
+    crtyd_min_X: float = 10000
+    crtyd_min_Y: float = 10000
     footprint_name: str = ""
     output_dir: str = ""
     footprint_lib: str = ""
@@ -23,6 +46,12 @@ class FootprintInfo:
     model_dir: str = ""
     origin: tuple = (0, 0)
     models: str = ""
+
+    def has_crtyd_bounds(self):
+        return (
+            self.crtyd_min_X <= self.crtyd_max_X
+            and self.crtyd_min_Y <= self.crtyd_max_Y
+        )
 
 
 def create_footprint(
@@ -90,6 +119,41 @@ def create_footprint(
     footprint_info.max_Y -= mil2mm(translation[1])
     footprint_info.min_X -= mil2mm(translation[0])
     footprint_info.min_Y -= mil2mm(translation[1])
+
+    if footprint_info.has_crtyd_bounds():
+        footprint_info.crtyd_max_X -= mil2mm(translation[0])
+        footprint_info.crtyd_max_Y -= mil2mm(translation[1])
+        footprint_info.crtyd_min_X -= mil2mm(translation[0])
+        footprint_info.crtyd_min_Y -= mil2mm(translation[1])
+
+        # EasyEDA footprint data does not include courtyard information (see
+        # https://github.com/TousstNicolas/JLC2KiCad_lib/issues/76), so a
+        # courtyard is approximated by inflating the bounding box of the
+        # copper/fab/paste/mask/edge-cuts graphics by a flat clearance and
+        # snapping the resulting rectangle to the standard KiCad courtyard
+        # grid. This mirrors the approach used by KiCad's own EasyEDA
+        # importer.
+        crtyd_start = [
+            _snap_to_grid(footprint_info.crtyd_min_X - CRTYD_CLEARANCE),
+            _snap_to_grid(footprint_info.crtyd_min_Y - CRTYD_CLEARANCE),
+        ]
+        crtyd_end = [
+            _snap_to_grid(footprint_info.crtyd_max_X + CRTYD_CLEARANCE),
+            _snap_to_grid(footprint_info.crtyd_max_Y + CRTYD_CLEARANCE),
+        ]
+        kicad_mod.append(
+            RectLine(
+                start=crtyd_start,
+                end=crtyd_end,
+                width=CRTYD_WIDTH,
+                layer="F.CrtYd",
+            )
+        )
+    else:
+        logging.warning(
+            f"footprint {footprint_name}: no copper/fab/paste/mask/edge-cuts "
+            "shapes found, skipping courtyard generation"
+        )
 
     # set general values
     kicad_mod.append(

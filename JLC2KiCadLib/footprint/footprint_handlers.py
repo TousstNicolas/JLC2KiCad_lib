@@ -31,6 +31,8 @@ __all__ = [
     "h_TEXT",
     "mil2mm",
     "svg_arc_to_points",
+    "update_crtyd_bounds",
+    "CRTYD_RELEVANT_LAYERS",
 ]
 
 layer_correspondance = {
@@ -51,8 +53,37 @@ layer_correspondance = {
 }
 
 
+# Layers considered when computing the courtyard bounding box. Pads and holes
+# are always relevant (they always touch copper/mask/paste), other shapes are
+# only relevant if drawn on one of these layers.
+CRTYD_RELEVANT_LAYERS = {
+    "F.Cu",
+    "B.Cu",
+    "F.Paste",
+    "B.Paste",
+    "F.Mask",
+    "B.Mask",
+    "F.Fab",
+    "Edge.Cuts",
+}
+
+
 def mil2mm(data):
     return float(data) / 3.937
+
+
+def update_crtyd_bounds(footprint_info, layer, min_x, max_x, min_y, max_y):
+    """
+    Update footprint_info's courtyard bounding box with the given extent, if
+    the given layer is relevant to courtyard generation.
+    """
+    if layer not in CRTYD_RELEVANT_LAYERS:
+        return
+
+    footprint_info.crtyd_min_X = min(footprint_info.crtyd_min_X, min_x)
+    footprint_info.crtyd_max_X = max(footprint_info.crtyd_max_X, max_x)
+    footprint_info.crtyd_min_Y = min(footprint_info.crtyd_min_Y, min_y)
+    footprint_info.crtyd_max_Y = max(footprint_info.crtyd_max_Y, max_y)
 
 
 def h_TRACK(data, kicad_mod, footprint_info):
@@ -86,6 +117,16 @@ def h_TRACK(data, kicad_mod, footprint_info):
         footprint_info.min_X = min(footprint_info.min_X, start[0], end[0])
         footprint_info.max_Y = max(footprint_info.max_Y, start[1], end[1])
         footprint_info.min_Y = min(footprint_info.min_Y, start[1], end[1])
+
+        # update courtyard bounding box, if this shape is on a relevant layer
+        update_crtyd_bounds(
+            footprint_info,
+            layer,
+            min(start[0], end[0]),
+            max(start[0], end[0]),
+            min(start[1], end[1]),
+            max(start[1], end[1]),
+        )
 
         # append line to kicad_mod
         kicad_mod.append(Line(start=start, end=end, width=width, layer=layer))
@@ -202,6 +243,32 @@ def h_PAD(data, kicad_mod, footprint_info):
     footprint_info.max_Y = max(footprint_info.max_Y, at[1])
     footprint_info.min_Y = min(footprint_info.min_Y, at[1])
 
+    # update courtyard bounding box. Pads always touch copper/mask/paste so
+    # they are always relevant, regardless of rotation. A conservative
+    # (rotation-independent) half-diagonal is used except for custom polygon
+    # pads, where the actual relative polygon extent is used instead.
+    if shape_type == "POLYGON" and primitives:
+        rel_x = points[0::2]
+        rel_y = points[1::2]
+        footprint_info.crtyd_min_X = min(
+            footprint_info.crtyd_min_X, at[0] + min(rel_x)
+        )
+        footprint_info.crtyd_max_X = max(
+            footprint_info.crtyd_max_X, at[0] + max(rel_x)
+        )
+        footprint_info.crtyd_min_Y = min(
+            footprint_info.crtyd_min_Y, at[1] + min(rel_y)
+        )
+        footprint_info.crtyd_max_Y = max(
+            footprint_info.crtyd_max_Y, at[1] + max(rel_y)
+        )
+    else:
+        half_diag = sqrt((size[0] / 2) ** 2 + (size[1] / 2) ** 2)
+        footprint_info.crtyd_min_X = min(footprint_info.crtyd_min_X, at[0] - half_diag)
+        footprint_info.crtyd_max_X = max(footprint_info.crtyd_max_X, at[0] + half_diag)
+        footprint_info.crtyd_min_Y = min(footprint_info.crtyd_min_Y, at[1] - half_diag)
+        footprint_info.crtyd_max_Y = max(footprint_info.crtyd_max_Y, at[1] + half_diag)
+
     kicad_mod.append(
         Pad(
             number=pad_number,
@@ -276,6 +343,14 @@ def h_ARC(data, kicad_mod, footprint_info):
             center = [start_x + radius, start_y]
         else:
             center = [start_x - radius, start_y]
+        update_crtyd_bounds(
+            footprint_info,
+            layer,
+            center[0] - radius,
+            center[0] + radius,
+            center[1] - radius,
+            center[1] + radius,
+        )
         kicad_mod.append(Circle(center=center, radius=radius, width=width, layer=layer))
         return
 
@@ -300,6 +375,19 @@ def h_ARC(data, kicad_mod, footprint_info):
 
     length = sqrt(length_squared)
     cen = Vector2D(mid) + vec2 * length
+
+    # conservative (safe upper bound) courtyard contribution: use the full
+    # circle bounding box around the arc's center, since computing the exact
+    # arc extent is unnecessary for this approximation
+    radius = max(radius_x, radius_y)
+    update_crtyd_bounds(
+        footprint_info,
+        layer,
+        cen[0] - radius,
+        cen[0] + radius,
+        cen[1] - radius,
+        cen[1] + radius,
+    )
 
     kicad_mod.append(Arc(start=start, end=end, width=width, center=cen, layer=layer))
 
@@ -329,6 +417,15 @@ def h_CIRCLE(data, kicad_mod, footprint_info):
             "footprint handler, h_CIRCLE : layer correspondance not found"
         )
         layer = "F.SilkS"
+
+    update_crtyd_bounds(
+        footprint_info,
+        layer,
+        center[0] - radius,
+        center[0] + radius,
+        center[1] - radius,
+        center[1] + radius,
+    )
 
     kicad_mod.append(Circle(center=center, radius=radius, width=width, layer=layer))
 
@@ -504,6 +601,9 @@ def h_SOLIDREGION(data, kicad_mod, footprint_info):
     points = [(mil2mm(p[0]), mil2mm(p[1])) for p in points]
 
     if points:
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        update_crtyd_bounds(footprint_info, layer, min(xs), max(xs), min(ys), max(ys))
         kicad_mod.append(Polygon(nodes=points, layer=layer))
 
 
@@ -555,6 +655,16 @@ def h_RECT(data, kicad_mod, footprint_info):
     start = [Xstart, Ystart]
     end = [Xstart + Xdelta, Ystart + Ydelta]
     width = mil2mm(data[7])
+    layer = layer_correspondance[data[4]]
+
+    update_crtyd_bounds(
+        footprint_info,
+        layer,
+        min(start[0], end[0]),
+        max(start[0], end[0]),
+        min(start[1], end[1]),
+        max(start[1], end[1]),
+    )
 
     if width == 0:
         # filled:
@@ -562,7 +672,7 @@ def h_RECT(data, kicad_mod, footprint_info):
             RectFill(
                 start=start,
                 end=end,
-                layer=layer_correspondance[data[4]],
+                layer=layer,
             )
         )
     else:
@@ -572,21 +682,31 @@ def h_RECT(data, kicad_mod, footprint_info):
                 start=start,
                 end=end,
                 width=width,
-                layer=layer_correspondance[data[4]],
+                layer=layer,
             )
         )
 
 
 def h_HOLE(data, kicad_mod, footprint_info):
+    at = [mil2mm(data[0]), mil2mm(data[1])]
+    radius = mil2mm(data[2])
+
+    # Holes are always relevant to courtyard generation (they always
+    # correspond to a physical hole in the board, regardless of layer).
+    footprint_info.crtyd_min_X = min(footprint_info.crtyd_min_X, at[0] - radius)
+    footprint_info.crtyd_max_X = max(footprint_info.crtyd_max_X, at[0] + radius)
+    footprint_info.crtyd_min_Y = min(footprint_info.crtyd_min_Y, at[1] - radius)
+    footprint_info.crtyd_max_Y = max(footprint_info.crtyd_max_Y, at[1] + radius)
+
     kicad_mod.append(
         Pad(
             number="",
             type=Pad.TYPE_NPTH,
             shape=Pad.SHAPE_CIRCLE,
-            at=[mil2mm(data[0]), mil2mm(data[1])],
-            size=mil2mm(data[2]) * 2,
+            at=at,
+            size=radius * 2,
             rotation=0,
-            drill=mil2mm(data[2]) * 2,
+            drill=radius * 2,
             layers=Pad.LAYERS_NPTH,
         )
     )
