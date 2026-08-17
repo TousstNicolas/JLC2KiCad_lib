@@ -33,7 +33,9 @@ from JLC2KiCadLib.footprint.footprint_handlers import (
     h_HOLE,
     h_PAD,
     h_RECT,
+    h_SVGNODE,
     h_TRACK,
+    svg_arc_to_points,
     update_crtyd_bounds,
 )
 
@@ -163,6 +165,23 @@ class TestHandlersUpdateCrtydBounds:
 
         assert not info.has_crtyd_bounds()
 
+    def test_h_track_unknown_layer_falls_back_to_silkscreen(self, caplog):
+        info = new_footprint_info()
+        kicad_mod = Footprint("test")
+        data = [
+            "1",
+            "15",
+            "",
+            f"{mm2mil(0)} {mm2mil(0)} {mm2mil(1)} {mm2mil(1)}",
+            "id",
+        ]
+
+        with caplog.at_level("ERROR"):
+            h_TRACK(data, kicad_mod, info)
+
+        assert "layer correspondance not found" in caplog.text
+        assert not info.has_crtyd_bounds()
+
     def test_h_pad_smd_updates_crtyd_bounds_with_half_diagonal(self):
         info = new_footprint_info()
         kicad_mod = Footprint("test")
@@ -222,6 +241,44 @@ class TestHandlersUpdateCrtydBounds:
         assert info.crtyd_max_X == pytest.approx(2)
         assert info.crtyd_min_Y == pytest.approx(0)
         assert info.crtyd_max_Y == pytest.approx(2)
+
+    @pytest.mark.parametrize(
+        ("shape_type", "size_x", "size_y", "drill", "offset"),
+        [
+            ("OVAL", 2, 1, 0.2, 0.1),
+            ("OVAL", 1, 2, 0.2, 0.3),
+            ("UNKNOWN", 2, 1, 0.2, 0.1),
+        ],
+    )
+    def test_h_pad_handles_offset_and_unknown_shapes(
+        self, shape_type, size_x, size_y, drill, offset, caplog
+    ):
+        info = new_footprint_info()
+        kicad_mod = Footprint("test")
+        data = [
+            shape_type,
+            mm2mil(0),
+            mm2mil(0),
+            mm2mil(size_x),
+            mm2mil(size_y),
+            "1",
+            "",
+            "1",
+            mm2mil(drill),
+            "",
+            "0",
+            "id",
+            mm2mil(offset),
+            "",
+            "Y",
+        ]
+
+        with caplog.at_level("ERROR"):
+            h_PAD(data, kicad_mod, info)
+
+        assert info.has_crtyd_bounds()
+        if shape_type == "UNKNOWN":
+            assert "no correspondance found" in caplog.text
 
     def test_h_hole_is_always_relevant(self):
         info = new_footprint_info()
@@ -303,6 +360,67 @@ class TestHandlersUpdateCrtydBounds:
         assert info.has_crtyd_bounds()
         assert info.crtyd_max_X - info.crtyd_min_X == pytest.approx(2 * radius_mm)
         assert info.crtyd_max_Y - info.crtyd_min_Y == pytest.approx(2 * radius_mm)
+
+    def test_h_arc_rejects_malformed_svg(self, caplog):
+        info = new_footprint_info()
+        with caplog.at_level("ERROR"):
+            h_ARC(["1", "12", "", "not-an-arc", "", "id"], Footprint("test"), info)
+        assert "failed to parse ARC" in caplog.text
+
+    def test_h_arc_full_circle_counterclockwise(self):
+        info = new_footprint_info()
+        data = ["1", "12", "", "M 0 0 A 100 100 0 1 0 0 0", "", "id"]
+
+        h_ARC(data, Footprint("test"), info)
+
+        assert info.has_crtyd_bounds()
+
+    def test_unknown_circle_layer_falls_back(self, caplog):
+        info = new_footprint_info()
+        with caplog.at_level("ERROR"):
+            h_CIRCLE(
+                [mm2mil(0), mm2mil(0), mm2mil(1), mm2mil(0.1), "15"],
+                Footprint("test"),
+                info,
+            )
+        assert "layer correspondance not found" in caplog.text
+
+    @pytest.mark.parametrize(
+        "args",
+        [(0, 0, 1, 1, 0, 0, 1, 0, 0), (0, 0, 0, 1, 0, 0, 1, 1, 1)],
+    )
+    def test_svg_arc_degenerate_cases(self, args):
+        points = svg_arc_to_points(*args)
+        assert points == [] or points == [(1, 1)]
+
+    def test_svg_node_invalid_json_is_ignored(self, caplog):
+        info = new_footprint_info()
+        with caplog.at_level("ERROR"):
+            result = h_SVGNODE(["not-json"], Footprint("test"), info)
+        assert result == ()
+        assert "failed to parse json data" in caplog.text
+
+    def test_filled_rect_is_emitted(self):
+        info = new_footprint_info()
+        footprint = Footprint("test")
+        data = [
+            mm2mil(0),
+            mm2mil(0),
+            mm2mil(2),
+            mm2mil(1),
+            "12",
+            "",
+            "",
+            mm2mil(0),
+        ]
+
+        h_RECT(data, footprint, info)
+
+        assert info.has_crtyd_bounds()
+        assert any(
+            item.__class__.__name__ == "RectFill"
+            for item in footprint.getNormalChilds()
+        )
 
 
 class TestCreateFootprintCourtyardGeneration:
