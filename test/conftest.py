@@ -120,14 +120,17 @@ def generated_components(
         old_level = root_logger.level
         root_logger.setLevel(logging.DEBUG)
 
+        # Generate each component independently: a transient failure (e.g. a
+        # network hiccup) on one component ID must not prevent the remaining
+        # IDs in the same multi-ID test case from being generated.
         generation_succeeded = True
         try:
-            # Generate all components in this test case
             for comp_id in test_case.component_ids:
-                add_component(comp_id, args)
-        except Exception as e:
-            stderr_capture.write(str(e))
-            generation_succeeded = False
+                try:
+                    add_component(comp_id, args)
+                except Exception as e:
+                    stderr_capture.write(f"{comp_id}: {e}\n")
+                    generation_succeeded = False
         finally:
             # Restore logging
             root_logger.handlers = old_handlers

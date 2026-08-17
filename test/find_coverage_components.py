@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from coverage import Coverage
 
+from JLC2KiCadLib import helper
 from JLC2KiCadLib.JLC2KiCadLib import add_component
 
 # Project root directory
@@ -194,6 +195,7 @@ def check_component_exists(component_id: str) -> bool:
         data = json.loads(
             requests.get(
                 f"https://easyeda.com/api/products/{component_id}/svgs",
+                headers={"User-Agent": helper.get_user_agent()},
                 timeout=10,
             ).content.decode()
         )

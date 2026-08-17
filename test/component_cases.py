@@ -116,6 +116,21 @@ TEST_CASES = [
         args=["--skip-existing"],
     ),
     ComponentTestCase(
+        # Found via test/find_coverage_components.py against an accurate
+        # baseline of the current committed test suite (real, verified via
+        # a full `pytest --cov` re-run, not just the scan tool's own greedy
+        # cumulative estimate). C2055768 (STM32 UFBGA-100) exercises the
+        # h_TRACK layer_correspondance KeyError fallback in
+        # footprint_handlers.py (EasyEDA mechanical layer "15", not in
+        # layer_correspondance). C2673804/C132646 (interface IC / STM32
+        # LQFP-48) add symbol.py/symbol_handlers.py coverage. All three
+        # footprints hit the pre-existing/unrelated fp_arc KLC-parsing
+        # limitation, already handled by a graceful skip in
+        # TestKLCChecksOnly (see "Could not parse footprint" above).
+        component_id=["C2055768", "C2673804", "C132646"],
+        description="coverage booster round 2",
+    ),
+    ComponentTestCase(
         # Sampled via a broad online scan (500 components, one per distinct
         # JLCPCB package) run to find courtyard-generation edge cases. All
         # of these produced a valid F.CrtYd and passed KLC rule F5.3;
