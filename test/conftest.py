@@ -26,6 +26,7 @@ class GeneratedComponent:
     output_dir: Path
     symbols: list[Path] = field(default_factory=list)
     footprints: list[Path] = field(default_factory=list)
+    models: list[Path] = field(default_factory=list)
     generation_succeeded: bool = False
     stdout: str = ""
     stderr: str = ""
@@ -139,6 +140,9 @@ def generated_components(
         # Find generated files
         symbols = list(component_dir.rglob("*.kicad_sym"))
         footprints = list(component_dir.rglob("*.kicad_mod"))
+        models = list(component_dir.rglob("*.step")) + list(
+            component_dir.rglob("*.wrl")
+        )
 
         # Store by test_id (handles both single and multiple component cases)
         components[test_id] = GeneratedComponent(
@@ -146,6 +150,7 @@ def generated_components(
             output_dir=component_dir,
             symbols=symbols,
             footprints=footprints,
+            models=models,
             generation_succeeded=generation_succeeded,
             stdout=stdout_capture.getvalue(),
             stderr=stderr_capture.getvalue(),

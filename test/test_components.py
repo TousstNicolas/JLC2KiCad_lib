@@ -152,6 +152,19 @@ class TestGenerationOnly:
         if test_case.expect_footprint:
             assert len(component.footprints) > 0, "Expected footprint file not found"
 
+        if test_case.models:
+            assert len(component.models) > 0, (
+                f"Expected 3D model file(s) ({test_case.models}) not found for "
+                f"{test_case.component_id}"
+            )
+            found_extensions = {model.suffix.lower() for model in component.models}
+            for requested_model in test_case.models:
+                expected_ext = f".{requested_model.lower()}"
+                assert expected_ext in found_extensions, (
+                    f"Expected a .{requested_model.lower()} 3D model file but "
+                    f"only found: {[m.name for m in component.models]}"
+                )
+
 
 @pytest.mark.integration
 class TestKLCChecksOnly:
