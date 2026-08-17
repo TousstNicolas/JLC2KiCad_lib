@@ -224,6 +224,7 @@ def run_component_with_coverage(
     cov = Coverage(
         source=["JLC2KiCadLib"],
         branch=False,
+        data_file=str(output_dir / ".coverage"),
     )
 
     args = Namespace(
