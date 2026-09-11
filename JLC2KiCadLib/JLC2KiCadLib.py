@@ -9,7 +9,7 @@ from . import helper
 
 __version__ = pkg_version("JLC2KiCadLib")
 
-from .footprint.footprint import create_footprint, get_footprint_info
+from .footprint.footprint import create_footprint
 from .symbol.symbol import create_symbol
 
 
@@ -45,7 +45,7 @@ def add_component(component_id, args):
             models=args.models,
         )
     else:
-        _, datasheet_link, _, _ = get_footprint_info(footprint_component_uuid)
+        datasheet_link = ""
         footprint_name = ""
 
     if args.symbol_creation:

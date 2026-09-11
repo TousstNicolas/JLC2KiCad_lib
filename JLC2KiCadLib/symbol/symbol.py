@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+import urllib.parse
 
 import requests
 
@@ -20,6 +21,69 @@ supported_value_types = [
     "Inductance",
     "Frequency",
 ]  # define which attribute/value from JLCPCB/LCSC will be added in the "value" field
+
+
+def extract_datasheet_link(data, fallback=""):
+    """
+    Extract the official datasheet link from EasyEDA component data.
+
+    Priority:
+    1. Direct EasyEDA / SZLCSC datasheet page based on szlcsc.id or lcsc.id:
+       https://item.szlcsc.com/datasheet/{title}/{part_id}.html
+    2. Component c_para metadata (e.g., '链接', 'link', 'Datasheet', etc.)
+    3. szlcsc or lcsc product url
+    4. fallback
+    """
+    if not isinstance(data, dict):
+        return fallback
+
+    result = data.get("result", {})
+    if not isinstance(result, dict):
+        return fallback
+
+    title = result.get("title", "")
+    szlcsc = result.get("szlcsc") or {}
+    lcsc = result.get("lcsc") or {}
+
+    part_id = None
+    if isinstance(szlcsc, dict):
+        part_id = szlcsc.get("id")
+    if not part_id and isinstance(lcsc, dict):
+        part_id = lcsc.get("id")
+
+    if part_id:
+        if title:
+            safe_title = urllib.parse.quote(str(title), safe="-_.~")
+            return f"https://item.szlcsc.com/datasheet/{safe_title}/{part_id}.html"
+        return f"https://item.szlcsc.com/{part_id}.html"
+
+    # Check c_para attributes
+    c_para = (
+        result.get("dataStr", {})
+        .get("head", {})
+        .get("c_para", {})
+    )
+    if isinstance(c_para, dict):
+        for key in [
+            "链接",
+            "link",
+            "Datasheet",
+            "datasheet",
+            "BOM_Datasheet",
+            "Datasheet_URL",
+            "URL",
+            "url",
+        ]:
+            val = c_para.get(key)
+            if val and isinstance(val, str) and val.strip().startswith("http"):
+                return val.strip()
+
+    if isinstance(szlcsc, dict) and szlcsc.get("url"):
+        return str(szlcsc["url"]).strip()
+    if isinstance(lcsc, dict) and lcsc.get("url"):
+        return str(lcsc["url"]).strip()
+
+    return fallback
 
 
 def create_symbol(
@@ -53,6 +117,11 @@ def create_symbol(
                 f"{response.status_code}"
             )
             return ()
+
+        # Extract real datasheet link from symbol metadata
+        symbol_datasheet = extract_datasheet_link(data)
+        if symbol_datasheet:
+            datasheet_link = symbol_datasheet
 
         symbol_shape = data["result"]["dataStr"]["shape"]
         symmbol_prefix = data["result"]["packageDetail"]["dataStr"]["head"]["c_para"][

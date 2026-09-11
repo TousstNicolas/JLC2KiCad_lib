@@ -221,11 +221,13 @@ def get_footprint_info(footprint_component_uuid):
     footprint_shape = data["result"]["dataStr"]["shape"]
     x = data["result"]["dataStr"]["head"]["x"]
     y = data["result"]["dataStr"]["head"]["y"]
-    try:
-        datasheet_link = data["result"]["dataStr"]["head"]["c_para"]["link"]
-    except KeyError:
-        datasheet_link = ""
-        logging.warning("Could not retrieve datasheet link from EASYEDA")
+    c_para = (
+        data.get("result", {})
+        .get("dataStr", {})
+        .get("head", {})
+        .get("c_para", {})
+    )
+    datasheet_link = c_para.get("link", "")
 
     footprint_name = (
         data["result"]["title"]
